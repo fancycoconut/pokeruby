@@ -126,7 +126,9 @@ struct TradeEwramSubstruct {
     /*0x08fc*/ u8 filler_08fc[0x704];
 };
 
-IWRAM_DATA u8 gUnknown_03000508[8];
+struct TradeEwramSubstruct2 *gUnknown_03004828;
+
+static u8 gUnknown_03000508[8];
 
 struct UnkStructF {
     u8 filler_0000[9];
@@ -209,7 +211,7 @@ EWRAM_DATA u8 *gUnknown_020296CC[13] = {0};
 EWRAM_DATA struct MailStruct gUnknown_02029700[6] = {0};
 EWRAM_DATA u8 gUnknown_020297D8[2] = {0};
 
-extern struct TradeEwramSubstruct *gUnknown_03004824;
+struct TradeEwramSubstruct *gUnknown_03004824;
 
 const u32 unref_data_820ABD4[] =
 {
@@ -452,46 +454,38 @@ const u8 gTradeMonSpriteCoords[][2] = {
     {23, 18} // CANCEL
 };
 
-const u8 gTradeLevelDisplayCoords[2][6][2] = {
-    {
-        // Your party
-        {5, 4},
-        {12, 4},
-        {5, 9},
-        {12, 9},
-        {5, 14},
-        {12, 14},
-    },
-    {
-        // Friend's party
-        {20, 4},
-        {27, 4},
-        {20, 9},
-        {27, 9},
-        {20, 14},
-        {27, 14}
-    }
+const u8 gTradeLevelDisplayCoords[][2] = {
+    // Your party
+    {5, 4},
+    {12, 4},
+    {5, 9},
+    {12, 9},
+    {5, 14},
+    {12, 14},
+    // Friend's party
+    {20, 4},
+    {27, 4},
+    {20, 9},
+    {27, 9},
+    {20, 14},
+    {27, 14}
 };
 
-const u8 gTradeMonBoxCoords[2][6][2] = {
-    {
-        // Your party
-        {1, 3},
-        {8, 3},
-        {1, 8},
-        {8, 8},
-        {1, 13},
-        {8, 13},
-    },
-    {
-        // Friend's party
-        {16, 3},
-        {23, 3},
-        {16, 8},
-        {23, 8},
-        {16, 13},
-        {23, 13}
-    }
+const u8 gTradeMonBoxCoords[][2] = {
+    // Your party
+    {1, 3},
+    {8, 3},
+    {1, 8},
+    {8, 8},
+    {1, 13},
+    {8, 13},
+    // Friend's party
+    {16, 3},
+    {23, 3},
+    {16, 8},
+    {23, 8},
+    {16, 13},
+    {23, 13}
 };
 
 const u8 gTradeUnknownSpriteCoords[][2][2] = {
@@ -1200,7 +1194,7 @@ static void sub_8047EC0(void)
             sub_8048C70();
             gMain.state ++;
             nullsub_5(7, 0);
-            PlayBGM(MUS_P_SCHOOL);
+            PlayBGM(MUS_SCHOOL);
             break;
         case 14:
             sub_804ACF4(1);
@@ -3052,71 +3046,15 @@ void sub_804A51C(u8 a0, u8 a1, u8 a2, u8 a3, u8 a4, u8 a5)
 #endif
 }
 
-// simple nonmatching, supposedly from a CSE optimization
-#ifdef NONMATCHING
 static void sub_804A6DC(u8 whichParty)
 {
     int i;
-    for (i = 0; i < gUnknown_03004824->partyCounts[whichParty]; i ++)
+    for (i = 0; i < gUnknown_03004824->partyCounts[whichParty]; i++)
     {
-        sub_804A51C(whichParty, i, gTradeLevelDisplayCoords[whichParty][i][0], gTradeLevelDisplayCoords[whichParty][i][1], gTradeMonBoxCoords[whichParty][i][0], gTradeMonBoxCoords[whichParty][i][1]);
+        int loc = i + whichParty * 6;
+        sub_804A51C(whichParty, i, gTradeLevelDisplayCoords[loc][0], gTradeLevelDisplayCoords[loc][1], gTradeMonBoxCoords[loc][0], gTradeMonBoxCoords[loc][1]);
     }
 }
-#else
-NAKED
-static void sub_804A6DC(u8 whichParty)
-{
-    asm_unified("\tpush {r4-r7,lr}\n"
-                    "\tsub sp, 0x8\n"
-                    "\tlsls r0, 24\n"
-                    "\tlsrs r6, r0, 24\n"
-                    "\tmovs r7, 0\n"
-                    "\tldr r0, _0804A734 @ =gUnknown_03004824\n"
-                    "\tldr r0, [r0]\n"
-                    "\tadds r0, 0x42\n"
-                    "\tadds r0, r6\n"
-                    "\tldrb r0, [r0]\n"
-                    "\tcmp r7, r0\n"
-                    "\tbge _0804A72C\n"
-                    "\tlsls r0, r6, 1\n"
-                    "\tadds r0, r6\n"
-                    "\tldr r1, _0804A738 @ =gTradeLevelDisplayCoords\n"
-                    "\tlsls r0, 2\n"
-                    "\tadds r5, r0, r1\n"
-                    "\tldr r1, _0804A73C @ =gTradeMonBoxCoords\n"
-                    "\tadds r4, r0, r1\n"
-                    "_0804A702:\n"
-                    "\tlsls r1, r7, 24\n"
-                    "\tlsrs r1, 24\n"
-                    "\tldrb r2, [r5]\n"
-                    "\tldrb r3, [r5, 0x1]\n"
-                    "\tldrb r0, [r4]\n"
-                    "\tstr r0, [sp]\n"
-                    "\tldrb r0, [r4, 0x1]\n"
-                    "\tstr r0, [sp, 0x4]\n"
-                    "\tadds r0, r6, 0\n"
-                    "\tbl sub_804A51C\n"
-                    "\tadds r5, 0x2\n"
-                    "\tadds r4, 0x2\n"
-                    "\tadds r7, 0x1\n"
-                    "\tldr r0, _0804A734 @ =gUnknown_03004824\n"
-                    "\tldr r0, [r0]\n"
-                    "\tadds r0, 0x42\n"
-                    "\tadds r0, r6\n"
-                    "\tldrb r0, [r0]\n"
-                    "\tcmp r7, r0\n"
-                    "\tblt _0804A702\n"
-                    "_0804A72C:\n"
-                    "\tadd sp, 0x8\n"
-                    "\tpop {r4-r7}\n"
-                    "\tpop {r0}\n"
-                    "\tbx r0\n"
-                    "\t.align 2, 0\n"
-                    "_0804A734: .4byte gUnknown_03004824\n"
-                    "_0804A738: .4byte gTradeLevelDisplayCoords\n"
-                    "_0804A73C: .4byte gTradeMonBoxCoords");
-}
-#endif
 
 static void sub_804A740(u8 whichParty)
 {
@@ -3441,7 +3379,7 @@ static void sub_804B058(struct Sprite *sprite)
 {
     if (++ sprite->data[0] == 10)
     {
-        PlaySE(SE_BOWA);
+        PlaySE(SE_BALL);
         sprite->data[0] = 0;
     }
 }
@@ -3476,7 +3414,7 @@ static void sub_804B104(struct Sprite *sprite)
 {
     if (++ sprite->data[0] == 15)
     {
-        PlaySE(SE_W107);
+        PlaySE(SE_M_MINIMIZE);
         sprite->data[0] = 0;
     }
 }
@@ -3493,68 +3431,31 @@ static void sub_804B128(void)
     REG_BG2Y = dest.dy;
 }
 
-// register swap with volatile, wtf !how
-#ifdef NONMATCHING
 static void sub_804B1BC(void)
 {
-    REG_BG1VOFS = gUnknown_03004828->bg1vofs, REG_BG1HOFS = gUnknown_03004828->bg1hofs;
-    //temp = ;
-    //asm(""::"r"(gUnknown_03004828->bg2vofs));
-    if (REG_DISPCNT % 8 == 0)
+    u16 dispcnt;
+
+    REG_BG1VOFS = gUnknown_03004828->bg1vofs;
+    REG_BG1HOFS = gUnknown_03004828->bg1hofs;
+
+    /*
+        A u16 cast allows for REG_DISPCNT storage to be swapped.
+        This is required for the function to match.
+
+        You can see this less obfuscated in FireRed and Emerald,
+        since they use gflib's GPU manager for this instead.
+    */
+    dispcnt = (*(u16 *)REG_ADDR_DISPCNT);
+    if ((dispcnt & 7) == DISPCNT_MODE_0)
     {
-        REG_BG2VOFS = gUnknown_03004828->bg2vofs, REG_BG2HOFS = gUnknown_03004828->bg2hofs;
+        REG_BG2VOFS = gUnknown_03004828->bg2vofs;
+        REG_BG2HOFS = gUnknown_03004828->bg2hofs;
     }
     else
     {
         sub_804B128();
     }
 }
-#else
-NAKED static void sub_804B1BC(void)
-{
-    asm_unified("\tpush {lr}\n"
-                    "\tldr r1, _0804B1FC @ =REG_BG1VOFS\n"
-                    "\tldr r0, _0804B200 @ =gUnknown_03004828\n"
-                    "\tldr r2, [r0]\n"
-                    "\tmovs r3, 0x88\n"
-                    "\tlsls r3, 1\n"
-                    "\tadds r0, r2, r3\n"
-                    "\tldrh r0, [r0]\n"
-                    "\tstrh r0, [r1]\n"
-                    "\tsubs r1, 0x2\n"
-                    "\tadds r3, 0x2\n"
-                    "\tadds r0, r2, r3\n"
-                    "\tldrh r0, [r0]\n"
-                    "\tstrh r0, [r1]\n"
-                    "\tmovs r0, 0x80\n"
-                    "\tlsls r0, 19\n"
-                    "\tldrh r0, [r0]\n"
-                    "\tmovs r1, 0x7\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbne _0804B208\n"
-                    "\tldr r1, _0804B204 @ =REG_BG2VOFS\n"
-                    "\tadds r3, 0x2\n"
-                    "\tadds r0, r2, r3\n"
-                    "\tldrh r0, [r0]\n"
-                    "\tstrh r0, [r1]\n"
-                    "\tsubs r1, 0x2\n"
-                    "\tadds r3, 0x2\n"
-                    "\tadds r0, r2, r3\n"
-                    "\tldrh r0, [r0]\n"
-                    "\tstrh r0, [r1]\n"
-                    "\tb _0804B20C\n"
-                    "\t.align 2, 0\n"
-                    "_0804B1FC: .4byte REG_BG1VOFS\n"
-                    "_0804B200: .4byte gUnknown_03004828\n"
-                    "_0804B204: .4byte REG_BG2VOFS\n"
-                    "_0804B208:\n"
-                    "\tbl sub_804B128\n"
-                    "_0804B20C:\n"
-                    "\tpop {r0}\n"
-                    "\tbx r0");
-}
-#endif
 
 static void sub_804B210(void)
 {
@@ -4455,7 +4356,7 @@ static bool8 sub_804C29C(void)
             gSprites[gUnknown_03004828->pokePicSpriteIdxs[0]].pos2.y = gMonFrontPicCoords[gUnknown_03004828->tradeSpecies[0]].y_offset;
             gUnknown_03004828->unk_00c4 ++;
             gUnknown_03004828->unk_0124 = GetCurrentMapMusic();
-            PlayBGM(MUS_SHINKA);
+            PlayBGM(MUS_EVOLUTION);
             break;
         case 1:
             if (gUnknown_03004828->bg2hofs > 0)
@@ -4608,7 +4509,7 @@ static bool8 sub_804C29C(void)
         case 32:
             if (!gPaletteFade.active)
             {
-                PlaySE(SE_TK_WARPOUT);
+                PlaySE(SE_WARP_OUT);
                 gUnknown_03004828->unk_00c4 ++;
             }
             gSprites[gUnknown_03004828->unk_00ba].pos2.y -= 3;
@@ -4662,7 +4563,7 @@ static bool8 sub_804C29C(void)
             gSprites[gUnknown_03004828->pokePicSpriteIdxs[1]].pos2.y += 3;
             if (-0xa0 > gSprites[gUnknown_03004828->pokePicSpriteIdxs[0]].pos2.y && gSprites[gUnknown_03004828->pokePicSpriteIdxs[0]].pos2.y >= -0xa3)
             {
-                PlaySE(SE_TK_WARPIN);
+                PlaySE(SE_WARP_IN);
             }
             if (gSprites[gUnknown_03004828->pokePicSpriteIdxs[0]].pos2.y < -0xde)
             {
@@ -4758,7 +4659,7 @@ static bool8 sub_804C29C(void)
                 DestroySprite(&gSprites[gUnknown_03004828->unk_00bb]);
                 sub_804BBE8(6);
                 gUnknown_03004828->unk_00c4 ++;
-                PlaySE(SE_W028);
+                PlaySE(SE_M_SAND_ATTACK);
             }
             break;
         case 51:
@@ -4838,7 +4739,7 @@ static bool8 sub_804C29C(void)
         case 68:
             if (++ gUnknown_03004828->unk_00c0 == 4)
             {
-                PlayFanfare(MUS_FANFA5);
+                PlayFanfare(MUS_EVOLVED);
             }
             if (gUnknown_03004828->unk_00c0 == 0xf0)
             {
@@ -4971,10 +4872,10 @@ static void sub_804D738(struct Sprite *sprite)
 {
     sprite->pos2.y += gTradeBallVerticalVelocityTable[sprite->data[0]];
     if (sprite->data[0] == 22)
-        PlaySE(SE_KON);
+        PlaySE(SE_BALL_BOUNCE_1);
     if (++ sprite->data[0] == 44)
     {
-        PlaySE(SE_W025);
+        PlaySE(SE_M_MEGA_KICK);
         sprite->callback = sub_804D7AC;
         sprite->data[0] = 0;
         BeginNormalPaletteFade(1 << (16 + sprite->oam.paletteNum), -1, 0, 16, FADE_COLOR_WHITE);
@@ -5004,17 +4905,17 @@ static void sub_804D80C(struct Sprite *sprite)
         {
             sprite->data[2] ++;
             sprite->data[0] = 0x16;
-            PlaySE(SE_KON);
+            PlaySE(SE_BALL_BOUNCE_1);
         }
     }
     else
     {
         if (sprite->data[0] == 0x42)
-            PlaySE(SE_KON2);
+            PlaySE(SE_BALL_BOUNCE_2);
         if (sprite->data[0] == 0x5c)
-            PlaySE(SE_KON3);
+            PlaySE(SE_BALL_BOUNCE_3);
         if (sprite->data[0] == 0x6b)
-            PlaySE(SE_KON4);
+            PlaySE(SE_BALL_BOUNCE_4);
         sprite->pos2.y += gTradeBallVerticalVelocityTable[sprite->data[0]];
         if (++sprite->data[0] == 0x6c)
             sprite->callback = SpriteCallbackDummy;

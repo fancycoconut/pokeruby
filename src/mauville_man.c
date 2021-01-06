@@ -20,7 +20,7 @@
 
 #define MACRO1(a) (((a) % 4) + (((a) / 8) & 1))
 
-extern struct MusicPlayerInfo gMPlay_SE2;
+extern struct MusicPlayerInfo gMPlayInfo_SE2;
 
 extern u16 gSpecialVar_Result;
 extern u16 gSpecialVar_0x8004;
@@ -134,7 +134,7 @@ extern const u8 gTextStoryteller_Story36Title[];
 extern const u8 gTextStoryteller_Story36Action[];
 extern const u8 gTextStoryteller_Story36Text[];
 
-extern struct BardSong gUnknown_03005DA0;
+struct BardSong gUnknown_03005DA0;
 
 EWRAM_DATA static u16 gUnknown_020388BC = 0;  // set but not used?
 
@@ -651,8 +651,8 @@ static void BardSing(struct Task *task, struct BardSong *song)
                         song->pitch += 64;
                     else
                         song->pitch -= 64;
-                    m4aMPlayVolumeControl(&gMPlay_SE2, 0xFFFF, song->volume);
-                    m4aMPlayPitchControl(&gMPlay_SE2, 0xFFFF, song->pitch);
+                    m4aMPlayVolumeControl(&gMPlayInfo_SE2, 0xFFFF, song->volume);
+                    m4aMPlayPitchControl(&gMPlayInfo_SE2, 0xFFFF, song->pitch);
                     song->voiceInflection++;
                 }
                 song->phonemeTimer--;
@@ -663,13 +663,13 @@ static void BardSing(struct Task *task, struct BardSong *song)
                 if (phoneme->sound <= 50)
                 {
                     song->volume = 0x100 + phoneme->volume * 16;
-                    m4aMPlayVolumeControl(&gMPlay_SE2, 0xFFFF, song->volume);
+                    m4aMPlayVolumeControl(&gMPlayInfo_SE2, 0xFFFF, song->volume);
                     song->pitch = 0x200 + phoneme->pitch;
-                    m4aMPlayPitchControl(&gMPlay_SE2, 0xFFFF, song->pitch);
+                    m4aMPlayPitchControl(&gMPlayInfo_SE2, 0xFFFF, song->pitch);
                 }
                 break;
             case 0xFE:
-                m4aMPlayStop(&gMPlay_SE2);
+                m4aMPlayStop(&gMPlayInfo_SE2);
                 song->state = 0xFF;
                 break;
             }
@@ -707,9 +707,6 @@ static void Task_BardSong(u8 taskId)
             struct MauvilleManBard *bard = &gSaveBlock1.mauvilleMan.bard;
             u8 *str = gStringVar4 + task->tCharIndex;
             u16 wordLen = 0;
-            // Can't get it to match without hacking
-            u32 temp;
-            register s16 zero asm("r1");
 
             while (*str != CHAR_SPACE
                 && *str != CHAR_NEWLINE
@@ -723,17 +720,20 @@ static void Task_BardSong(u8 taskId)
                 gUnknown_020388BC = MACRO1(bard->songLyrics[task->tCurrWord]);
             else
                 gUnknown_020388BC = MACRO1(bard->temporaryLyrics[task->tCurrWord]);
-            temp = gUnknown_03005DA0.var04 / wordLen;
-            zero = 0;
-            gUnknown_03005DA0.var04 = temp;
+            gUnknown_03005DA0.var04 /= wordLen;
             if (gUnknown_03005DA0.var04 <= 0)
                 gUnknown_03005DA0.var04 = 1;
             task->tCurrWord++;
             if (task->data[2] == 0)
+            {
                 task->tState = 3;
+                task->data[1] = 0;
+            }
             else
+            {
                 task->tState = 5;
-            task->data[1] = zero;
+                task->data[1] = 0;
+            }
         }
         break;
     case 5:
@@ -745,8 +745,8 @@ static void Task_BardSong(u8 taskId)
     case 3:
         if (gStringVar4[task->tCharIndex] == EOS)
         {
-            FadeInNewBGM(MUS_POKECEN, 6);
-            m4aMPlayFadeOutTemporarily(&gMPlay_SE2, 2);
+            FadeInNewBGM(MUS_POKE_CENTER, 6);
+            m4aMPlayFadeOutTemporarily(&gMPlayInfo_SE2, 2);
             EnableBothScriptContexts();
             DestroyTask(taskId);
         }
@@ -806,7 +806,7 @@ static void Task_BardSong(u8 taskId)
 
 void sub_80F83D0(void)
 {
-    VarSet(VAR_OBJ_GFX_ID_0, EVENT_OBJ_GFX_BARD + GetCurrentMauvilleOldMan());
+    VarSet(VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_BARD + GetCurrentMauvilleOldMan());
 }
 
 struct Story

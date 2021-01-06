@@ -1,7 +1,7 @@
 DesertRuins_MapScripts:: @ 815CAF3
-	map_script 5, DesertRuins_MapScript1_15CB03
-	map_script 1, DesertRuins_MapScript1_15CB11
-	map_script 3, DesertRuins_MapScript1_15CB52
+	map_script MAP_SCRIPT_ON_RESUME, DesertRuins_MapScript1_15CB03
+	map_script MAP_SCRIPT_ON_LOAD, DesertRuins_MapScript1_15CB11
+	map_script MAP_SCRIPT_ON_TRANSITION, DesertRuins_MapScript1_15CB52
 	.byte 0
 
 DesertRuins_MapScript1_15CB03:: @ 815CB03
@@ -9,7 +9,7 @@ DesertRuins_MapScript1_15CB03:: @ 815CB03
 	end
 
 DesertRuins_EventScript_15CB0D:: @ 815CB0D
-	removeobject LAST_TALKED
+	removeobject VAR_LAST_TALKED
 	return
 
 DesertRuins_MapScript1_15CB11:: @ 815CB11
@@ -17,12 +17,12 @@ DesertRuins_MapScript1_15CB11:: @ 815CB11
 	end
 
 DesertRuins_EventScript_15CB1B:: @ 815CB1B
-	setmetatile 7, 19, 553, 1
-	setmetatile 8, 19, 553, 1
-	setmetatile 9, 19, 553, 1
-	setmetatile 7, 20, 565, 1
-	setmetatile 8, 20, 565, 1
-	setmetatile 9, 20, 565, 1
+	setmetatile 7, 19, METATILE_Cave_EntranceCover, 1
+	setmetatile 8, 19, METATILE_Cave_EntranceCover, 1
+	setmetatile 9, 19, METATILE_Cave_EntranceCover, 1
+	setmetatile 7, 20, METATILE_Cave_SealedChamberBraille_Mid, 1
+	setmetatile 8, 20, METATILE_Cave_SealedChamberBraille_Mid, 1
+	setmetatile 9, 20, METATILE_Cave_SealedChamberBraille_Mid, 1
 	return
 
 DesertRuins_MapScript1_15CB52:: @ 815CB52
@@ -39,7 +39,7 @@ DesertRuins_EventScript_15CB56:: @ 815CB56
 	end
 
 DesertRuins_EventScript_15CB6D:: @ 815CB6D
-	msgbox DesertRuins_Text_1A13BE, 4
+	msgbox DesertRuins_Text_1A13BE, MSGBOX_DEFAULT
 	releaseall
 	end
 

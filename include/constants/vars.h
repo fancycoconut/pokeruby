@@ -1,8 +1,6 @@
 #ifndef GUARD_CONSTANTS_VARS_H
 #define GUARD_CONSTANTS_VARS_H
 
-#define VAR_0x3F20                 0x3F20
-
 #define VARS_START 0x4000
 
 // temporary vars
@@ -25,9 +23,9 @@
 #define VAR_TEMP_F                 0x400F
 
 // object gfx id vars
-// These 0x10 vars are used to dynamically control a event object's sprite.
+// These 0x10 vars are used to dynamically control an object event's sprite.
 // For example, the rival's sprite id is dynamically set based on the player's gender.
-// See VarGetEventObjectGraphicsId().
+// See VarGetObjectEventGraphicsId().
 #define VAR_OBJ_GFX_ID_0           0x4010
 #define VAR_OBJ_GFX_ID_1           0x4011
 #define VAR_OBJ_GFX_ID_2           0x4012
@@ -110,7 +108,7 @@
 #define VAR_LINK_CONTEST_ROOM_STATE 0x4086
 #define VAR_CABLE_CLUB_STATE        0x4087
 #define VAR_CONTEST_LOCATION        0x4088
-#define VAR_0x4089                  0x4089 // TODO: related to decorations
+#define VAR_SECRET_BASE_INITIALIZED 0x4089
 #define VAR_CONTEST_PRIZE_PICKUP    0x408A
 
 #define VAR_LITTLEROOT_HOUSES_STATE_2 0x408C // TODO: needs more investigation
@@ -124,7 +122,7 @@
 #define VAR_LILYCOVE_MUSEUM_2F_STATE 0x4094
 #define VAR_LILYCOVE_FAN_CLUB_STATE  0x4095
 #define VAR_BRINEY_LOCATION          0x4096
-#define VAR_0x4097                   0x4097 // TODO: related to creating new secret base
+#define VAR_INIT_SECRET_BASE         0x4097
 #define VAR_PETALBURG_WOODS_STATE    0x4098
 #define VAR_LILYCOVE_CONTEST_LOBBY_STATE 0x4099
 #define VAR_RUSTURF_TUNNEL_STATE     0x409a
@@ -172,25 +170,30 @@
 #define VAR_STEVENS_HOUSE_STATE           0x40C6
 #define VAR_OLDALE_STATE                  0x40C7
 
+#define VARS_END                          0x40FF
+
+#define SPECIAL_VARS_START 0x8000
 // special vars
 // They are commonly used as parameters to commands, or return values from commands.
-#define VAR_SPECIAL_0     0x8000
-#define VAR_SPECIAL_1     0x8001
-#define VAR_SPECIAL_2     0x8002
-#define VAR_SPECIAL_3     0x8003
-#define VAR_SPECIAL_4     0x8004
-#define VAR_SPECIAL_5     0x8005
-#define VAR_SPECIAL_6     0x8006
-#define VAR_SPECIAL_7     0x8007
-#define VAR_SPECIAL_8     0x8008
-#define VAR_SPECIAL_9     0x8009
-#define VAR_SPECIAL_A     0x800A
-#define VAR_SPECIAL_B     0x800B
-#define FACING           0x800C
-#define RESULT           0x800D
-#define ITEM_ID          0x800E
-#define LAST_TALKED      0x800F
-#define CONTEST_RANK     0x8010
-#define CONTEST_CATEGORY 0x8011
+#define VAR_0x8000                    0x8000
+#define VAR_0x8001                    0x8001
+#define VAR_0x8002                    0x8002
+#define VAR_0x8003                    0x8003
+#define VAR_0x8004                    0x8004
+#define VAR_0x8005                    0x8005
+#define VAR_0x8006                    0x8006
+#define VAR_0x8007                    0x8007
+#define VAR_0x8008                    0x8008
+#define VAR_0x8009                    0x8009
+#define VAR_0x800A                    0x800A
+#define VAR_0x800B                    0x800B
+#define VAR_FACING                    0x800C
+#define VAR_RESULT                    0x800D
+#define VAR_ITEM_ID                   0x800E
+#define VAR_LAST_TALKED               0x800F
+#define VAR_CONTEST_RANK              0x8010
+#define VAR_CONTEST_CATEGORY          0x8011
+
+#define SPECIAL_VARS_END              0x8015
 
 #endif // GUARD_CONSTANTS_VARS_H

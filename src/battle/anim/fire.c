@@ -4,7 +4,7 @@
 #include "trig.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
+extern u8 gBattleAnimAttacker;
 
 void sub_80D4ED8(struct Sprite *sprite);
 void sub_80D4F18(struct Sprite *sprite);
@@ -202,7 +202,7 @@ void sub_80D4F5C(struct Sprite *sprite)
 {
     sub_8078650(sprite);
 
-    if (GetBattlerSide(gAnimBankAttacker))
+    if (GetBattlerSide(gBattleAnimAttacker))
     {
         sprite->pos1.x -= gBattleAnimArgs[0];
         sprite->pos1.y += gBattleAnimArgs[1];
@@ -224,7 +224,7 @@ void sub_80D4F5C(struct Sprite *sprite)
 
 void sub_80D4FCC(struct Sprite *sprite)
 {
-    if (GetBattlerSide(gAnimBankAttacker))
+    if (GetBattlerSide(gBattleAnimAttacker))
     {
         sprite->pos1.x -= gBattleAnimArgs[0];
         sprite->pos1.y += gBattleAnimArgs[1];
@@ -253,14 +253,14 @@ static void sub_80D5038(struct Sprite *sprite)
     }
 
     if (sprite->data[0] == sprite->data[1])
-        move_anim_8074EE0(sprite);
+        DestroySpriteAndMatrix(sprite);
 }
 
 void sub_80D5074(struct Sprite *sprite)
 {
     sub_8078650(sprite);
 
-    if (GetBattlerSide(gAnimBankAttacker))
+    if (GetBattlerSide(gBattleAnimAttacker))
     {
         sprite->pos1.x -= gBattleAnimArgs[0];
     }
@@ -303,6 +303,6 @@ static void sub_80D50E8(struct Sprite *sprite)
     }
     else
     {
-        move_anim_8074EE0(sprite);
+        DestroySpriteAndMatrix(sprite);
     }
 }

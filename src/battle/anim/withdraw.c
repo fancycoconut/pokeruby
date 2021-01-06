@@ -5,10 +5,10 @@
 #include "sound.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 
-extern u8 gBankSpriteIds[];
+extern u8 gBattlerSpriteIds[];
 
 static void sub_80CF514(u8 taskId);
 
@@ -17,15 +17,15 @@ static void sub_80CF514(u8 taskId);
 
 void sub_80CF4D8(u8 taskId)
 {
-    sub_8078E70(gBankSpriteIds[gAnimBankAttacker], 0);
+    PrepareBattlerSpriteForRotScale(gBattlerSpriteIds[gBattleAnimAttacker], 0);
     gTasks[taskId].func = sub_80CF514;
 }
 
 void sub_80CF514(u8 taskId)
 {
-    u8 a = gBankSpriteIds[gAnimBankAttacker];
+    u8 a = gBattlerSpriteIds[gBattleAnimAttacker];
     s16 b;
-    if (GetBattlerSide(gAnimBankAttacker) == 0)
+    if (GetBattlerSide(gBattleAnimAttacker) == 0)
     {
         b = -gTasks[taskId].data[0];
     }

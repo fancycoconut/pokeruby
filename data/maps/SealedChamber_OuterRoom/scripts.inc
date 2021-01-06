@@ -1,7 +1,7 @@
 SealedChamber_OuterRoom_MapScripts:: @ 815F0C6
-	map_script 5, SealedChamber_OuterRoom_MapScript1_15F0D6
-	map_script 3, SealedChamber_OuterRoom_MapScript1_15F0E7
-	map_script 1, SealedChamber_OuterRoom_MapScript1_15F0EB
+	map_script MAP_SCRIPT_ON_RESUME, SealedChamber_OuterRoom_MapScript1_15F0D6
+	map_script MAP_SCRIPT_ON_TRANSITION, SealedChamber_OuterRoom_MapScript1_15F0E7
+	map_script MAP_SCRIPT_ON_LOAD, SealedChamber_OuterRoom_MapScript1_15F0EB
 	.byte 0
 
 SealedChamber_OuterRoom_MapScript1_15F0D6:: @ 815F0D6
@@ -18,12 +18,12 @@ SealedChamber_OuterRoom_MapScript1_15F0EB:: @ 815F0EB
 	end
 
 SealedChamber_OuterRoom_EventScript_15F0F5:: @ 815F0F5
-	setmetatile 9, 1, 553, 1
-	setmetatile 10, 1, 553, 1
-	setmetatile 11, 1, 553, 1
-	setmetatile 9, 2, 565, 1
-	setmetatile 10, 2, 565, 1
-	setmetatile 11, 2, 565, 1
+	setmetatile 9, 1, METATILE_Cave_EntranceCover, 1
+	setmetatile 10, 1, METATILE_Cave_EntranceCover, 1
+	setmetatile 11, 1, METATILE_Cave_EntranceCover, 1
+	setmetatile 9, 2, METATILE_Cave_SealedChamberBraille_Mid, 1
+	setmetatile 10, 2, METATILE_Cave_SealedChamberBraille_Mid, 1
+	setmetatile 11, 2, METATILE_Cave_SealedChamberBraille_Mid, 1
 	return
 
 SealedChamber_OuterRoom_EventScript_15F12C:: @ 815F12C
@@ -116,7 +116,7 @@ SealedChamber_OuterRoom_EventScript_15F1B8:: @ 815F1B8
 	end
 
 SealedChamber_OuterRoom_EventScript_15F1CF:: @ 815F1CF
-	msgbox SealedChamber_OuterRoom_Text_1A13BE, 4
+	msgbox SealedChamber_OuterRoom_Text_1A13BE, MSGBOX_DEFAULT
 	releaseall
 	end
 

@@ -2,15 +2,15 @@ S_CuttableTree:: @ 81B0DCC
 	lockall
 	goto_if_unset FLAG_BADGE01_GET, CannotUseCut
 	checkpartymove MOVE_CUT
-	compare RESULT, 6
+	compare VAR_RESULT, 6
 	goto_if_eq CannotUseCut
-	setfieldeffectargument 0, RESULT
-	bufferpartymonnick 0, RESULT
+	setfieldeffectargument 0, VAR_RESULT
+	bufferpartymonnick 0, VAR_RESULT
 	buffermovename 1, MOVE_CUT
 	msgbox UseCutPromptText, MSGBOX_YESNO
-	compare RESULT, NO
+	compare VAR_RESULT, NO
 	goto_if_eq Cut_ChoseNo
-	msgbox UsedCutRockSmashText, 4
+	msgbox UsedCutRockSmashText, MSGBOX_DEFAULT
 	closemessage
 	dofieldeffect FLDEFF_USE_CUT_ON_TREE
 	waitstate
@@ -25,18 +25,18 @@ DoCutFieldEffectScript:: @ 81B0E16
 	end
 
 DoTreeCutMovement: @ 81B0E21
-	applymovement LAST_TALKED, TreeCutMovement @ tree cut animation
+	applymovement VAR_LAST_TALKED, TreeCutMovement @ tree cut animation
 	waitmovement 0
-	removeobject LAST_TALKED @ tree disappears
+	removeobject VAR_LAST_TALKED @ tree disappears
 	releaseall
 	end
 
 TreeCutMovement: @ 81B0E30
 	cut_tree
-	end_movement
+	step_end
 
 CannotUseCut: @ 81B0E32
-	msgbox CannotUseCutText, 3
+	msgbox CannotUseCutText, MSGBOX_SIGN
 	releaseall
 	end
 
@@ -62,15 +62,15 @@ S_BreakableRock:: @ 81B0EB7
 	lockall
 	goto_if_unset FLAG_BADGE03_GET, CannotUseRockSmash
 	checkpartymove MOVE_ROCK_SMASH
-	compare RESULT, 6
+	compare VAR_RESULT, 6
 	goto_if_eq CannotUseRockSmash
-	setfieldeffectargument 0, RESULT
-	bufferpartymonnick 0, RESULT
+	setfieldeffectargument 0, VAR_RESULT
+	bufferpartymonnick 0, VAR_RESULT
 	buffermovename 1, MOVE_ROCK_SMASH
 	msgbox UseRockSmashPromptText, MSGBOX_YESNO
-	compare RESULT, NO
+	compare VAR_RESULT, NO
 	goto_if_eq RockSmash_ChoseNo
-	msgbox UsedCutRockSmashText, 4
+	msgbox UsedCutRockSmashText, MSGBOX_DEFAULT
 	closemessage
 	dofieldeffect FLDEFF_USE_ROCK_SMASH
 	waitstate
@@ -85,14 +85,14 @@ S_UseRockSmash:: @ 81B0F01
 	end
 
 DoRockSmashMovement: @ 81B0F0C
-	applymovement LAST_TALKED, RockSmashMovement
+	applymovement VAR_LAST_TALKED, RockSmashMovement
 	waitmovement 0
-	removeobject LAST_TALKED
-	specialvar RESULT, TryUpdateRusturfTunnelState
-	compare RESULT, 1
+	removeobject VAR_LAST_TALKED
+	specialvar VAR_RESULT, TryUpdateRusturfTunnelState
+	compare VAR_RESULT, 1
 	goto_if_eq DoRockSmashMovement_Done
 	special ScrSpecial_RockSmashWildEncounter
-	compare RESULT, 0
+	compare VAR_RESULT, 0
 	goto_if_eq DoRockSmashMovement_Done
 	waitstate
 	releaseall
@@ -104,10 +104,10 @@ DoRockSmashMovement_Done: @ 81B0F3A
 
 RockSmashMovement: @ 81B0F3C
 	rock_smash_break
-	end_movement
+	step_end
 
 CannotUseRockSmash: @ 81B0F3E
-	msgbox CannotUseRockSmashText, 3
+	msgbox CannotUseRockSmashText, MSGBOX_SIGN
 	releaseall
 	end
 
@@ -129,11 +129,11 @@ S_PushableBoulder:: @ 81B0FCB
 	goto_if_unset FLAG_BADGE04_GET, CannotUseStrength
 	goto_if_set FLAG_SYS_USE_STRENGTH, AlreadyUsedStrength
 	checkpartymove 70
-	compare RESULT, 6
+	compare VAR_RESULT, 6
 	goto_if_eq CannotUseStrength
-	setfieldeffectargument 0, RESULT
+	setfieldeffectargument 0, VAR_RESULT
 	msgbox UseStrengthPromptText, MSGBOX_YESNO
-	compare RESULT, NO
+	compare VAR_RESULT, NO
 	goto_if_eq Strength_ChoseNo
 	closemessage
 	dofieldeffect FLDEFF_USE_STRENGTH
@@ -150,17 +150,17 @@ S_UseStrength:: @ 81B100E
 
 UsedStrength: @ 81B1019
 	setflag FLAG_SYS_USE_STRENGTH
-	msgbox UsedStrengthText, 3
+	msgbox UsedStrengthText, MSGBOX_SIGN
 	releaseall
 	end
 
 CannotUseStrength: @ 81B1026
-	msgbox CannotUseStrengthText, 3
+	msgbox CannotUseStrengthText, MSGBOX_SIGN
 	releaseall
 	end
 
 AlreadyUsedStrength: @ 81B1030
-	msgbox AlreadyUsedStrengthText, 3
+	msgbox AlreadyUsedStrengthText, MSGBOX_SIGN
 	releaseall
 	end
 
@@ -190,21 +190,21 @@ AlreadyUsedStrengthText: @ 81B1127
 S_UseWaterfall:: @ 81B115A
 	lockall
 	checkpartymove MOVE_WATERFALL
-	compare RESULT, 6
+	compare VAR_RESULT, 6
 	goto_if_eq Waterfall_NoMonKnows
-	bufferpartymonnick 0, RESULT
-	setfieldeffectargument 0, RESULT
+	bufferpartymonnick 0, VAR_RESULT
+	setfieldeffectargument 0, VAR_RESULT
 	msgbox UseWaterfallPromptText, MSGBOX_YESNO
-	compare RESULT, NO
+	compare VAR_RESULT, NO
 	goto_if_eq Waterfall_Done
-	msgbox UsedWaterfallText, 4
+	msgbox UsedWaterfallText, MSGBOX_DEFAULT
 	dofieldeffect FLDEFF_USE_WATERFALL
 	goto Waterfall_Done
 
 S_CannotUseWaterfall:: @ 81B1194
 	lockall
 Waterfall_NoMonKnows: @ 81B1195
-	msgbox CannotUseWaterfallText, 4
+	msgbox CannotUseWaterfallText, MSGBOX_DEFAULT
 Waterfall_Done:  @ 81B119D
 	releaseall
 	end
@@ -223,21 +223,21 @@ UsedWaterfallText: @ 81B120D
 UseDiveScript:: @ 81B1220
 	lockall
 	checkpartymove MOVE_DIVE
-	compare RESULT, 6
+	compare VAR_RESULT, 6
 	goto_if_eq CannotUseDive
-	bufferpartymonnick 0, RESULT
-	setfieldeffectargument 0, RESULT
+	bufferpartymonnick 0, VAR_RESULT
+	setfieldeffectargument 0, VAR_RESULT
 	setfieldeffectargument 1, 1
 	msgbox UseDivePromptText, MSGBOX_YESNO
-	compare RESULT, NO
+	compare VAR_RESULT, NO
 	goto_if_eq Dive_Done
-	msgbox UsedDiveText, 4
+	msgbox UsedDiveText, MSGBOX_DEFAULT
 	dofieldeffect FLDEFF_USE_DIVE
 	goto Dive_Done
 	lockall
 
 CannotUseDive: @ 81B125F
-	msgbox CannotUseDiveText, 4
+	msgbox CannotUseDiveText, MSGBOX_DEFAULT
 
 Dive_Done: @ 81B1267
 	releaseall
@@ -246,27 +246,27 @@ Dive_Done: @ 81B1267
 S_UseDiveUnderwater:: @ 81B1269
 	lockall
 	checkpartymove MOVE_DIVE
-	compare RESULT, 6
+	compare VAR_RESULT, 6
 	goto_if_eq UnderwaterCannotUseDive
-	bufferpartymonnick 0, RESULT
-	setfieldeffectargument 0, RESULT
+	bufferpartymonnick 0, VAR_RESULT
+	setfieldeffectargument 0, VAR_RESULT
 	setfieldeffectargument 1, 1
 	msgbox UnderwaterUseDivePromptText, MSGBOX_YESNO
-	compare RESULT, NO
+	compare VAR_RESULT, NO
 	goto_if_eq UnderwaterDive_Done
-	msgbox UsedDiveText, 4
+	msgbox UsedDiveText, MSGBOX_DEFAULT
 	dofieldeffect FLDEFF_USE_DIVE
 	goto UnderwaterDive_Done
 
 UnderwaterCannotUseDive: @ 81B12A7
 	lockall
-	msgbox UnderwaterCannotUseDiveText, 4
+	msgbox UnderwaterCannotUseDiveText, MSGBOX_DEFAULT
 	goto UnderwaterDive_Done
 
 @ not used
 SurfacingBlocked: @ 81B12B5
 	lockall
-	msgbox SurfacingBlockedText, 4
+	msgbox SurfacingBlockedText, MSGBOX_DEFAULT
 
 UnderwaterDive_Done: @ 81B12BE
 	releaseall
@@ -297,7 +297,7 @@ SurfacingBlockedText: @ 81B13CE
 	.string "eingesetzt werden.$"
 
 SweetScentNothingHereScript:: @ 81B140C
-	msgbox SweetScentNothingHereText, 3
+	msgbox SweetScentNothingHereText, MSGBOX_SIGN
 	end
 
 SweetScentNothingHereText: @ 81B1415

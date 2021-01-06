@@ -44,9 +44,6 @@ struct EggHatchData* gEggHatchData;
 extern const u32 gBattleTextboxTiles[];
 extern const u32 gBattleTextboxTilemap[];
 extern const u16 gBattleTextboxPalette[]; //palette
-extern const struct SpriteSheet sUnknown_0820A3B0;
-extern const struct SpriteSheet sUnknown_0820A3B8;
-extern const struct SpritePalette sUnknown_0820A3C0;
 
 bool8 GetSetPokedexFlag(u16 nationalNum, u8 caseID);
 u8 sav1_map_get_name(void);
@@ -365,7 +362,7 @@ static u8 EggHatchCreateMonSprite(u8 a0, u8 switchID, u8 pokeID)
     case 1:
         GetMonSpriteTemplate_803C56C(GetMonSpritePalStruct(mon)->tag, r5);
         spriteID = CreateSprite(&gUnknown_02024E8C, 120, 70, 6);
-        gSprites[spriteID].invisible = 1;
+        gSprites[spriteID].invisible = TRUE;
         gSprites[spriteID].callback = SpriteCallbackDummy;
         break;
     }
@@ -598,7 +595,7 @@ static void SpriteCB_Egg_0(struct Sprite* sprite)
         sprite->pos2.x = Sin(sprite->data[1], 1);
         if (sprite->data[0] == 15)
         {
-            PlaySE(SE_BOWA);
+            PlaySE(SE_BALL);
             StartSpriteAnim(sprite, 1);
             CreateRandomEggShardSprite();
         }
@@ -621,7 +618,7 @@ static void SpriteCB_Egg_1(struct Sprite* sprite)
             sprite->pos2.x = Sin(sprite->data[1], 2);
             if (sprite->data[0] == 15)
             {
-                PlaySE(SE_BOWA);
+                PlaySE(SE_BALL);
                 StartSpriteAnim(sprite, 2);
             }
         }
@@ -648,13 +645,13 @@ static void SpriteCB_Egg_2(struct Sprite* sprite)
             sprite->pos2.x = Sin(sprite->data[1], 2);
             if (sprite->data[0] == 15)
             {
-                PlaySE(SE_BOWA);
+                PlaySE(SE_BALL);
                 StartSpriteAnim(sprite, 2);
                 CreateRandomEggShardSprite();
                 CreateRandomEggShardSprite();
             }
             if (sprite->data[0] == 30)
-                PlaySE(SE_BOWA);
+                PlaySE(SE_BALL);
         }
     }
 }
@@ -681,8 +678,8 @@ static void SpriteCB_Egg_4(struct Sprite* sprite)
     sprite->data[0]++;
     if (!gPaletteFade.active)
     {
-        PlaySE(SE_TAMAGO);
-        sprite->invisible = 1;
+        PlaySE(SE_EGG_HATCH);
+        sprite->invisible = TRUE;
         sprite->callback = SpriteCB_Egg_5;
         sprite->data[0] = 0;
     }
@@ -692,7 +689,7 @@ static void SpriteCB_Egg_5(struct Sprite* sprite)
 {
     if (sprite->data[0] == 0)
     {
-        gSprites[gEggHatchData->pokeSpriteID].invisible = 0;
+        gSprites[gEggHatchData->pokeSpriteID].invisible = FALSE;
         StartSpriteAffineAnim(&gSprites[gEggHatchData->pokeSpriteID], 1);
     }
     if (sprite->data[0] == 8)

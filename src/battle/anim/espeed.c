@@ -5,8 +5,8 @@
 #include "sound.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 
 void sub_80D1A70(struct Sprite* sprite);
 static void sub_80D15E0(u8 taskId);
@@ -63,17 +63,17 @@ void sub_80D15A4(u8 taskId)
     struct Task* task = &gTasks[taskId];
     u8 spriteId = GetAnimBattlerSpriteId(0);
     task->data[0] = spriteId;
-    sub_80798F4(task, spriteId, &gSpriteAffineAnim_83D79BC);
+    PrepareAffineAnimInTaskData(task, spriteId, &gSpriteAffineAnim_83D79BC);
     task->func = sub_80D15E0;
 }
 
 void sub_80D15E0(u8 taskId)
 {
     struct Task* task = &gTasks[taskId];
-    if (sub_807992C(task) == 0)
+    if (RunAffineAnimFromTaskData(task) == 0)
     {
         gSprites[task->data[0]].pos2.y = 0;
-        gSprites[task->data[0]].invisible = 1;
+        gSprites[task->data[0]].invisible = TRUE;
         DestroyAnimVisualTask(taskId);
     }
 }
@@ -87,7 +87,7 @@ void sub_80D1638(u8 taskId)
     task->data[2] = 0;
     task->data[3] = 0;
     task->data[12] = 3;
-    if (GetBattlerSide(gAnimBankTarget) == 0)
+    if (GetBattlerSide(gBattleAnimTarget) == 0)
     {
         task->data[13] = 0xFFFF;
         task->data[14] = 8;
@@ -170,9 +170,9 @@ void sub_80D1808(u8 taskId)
     {
         task->data[1] = 0;
         if (++task->data[2] & 1)
-            gSprites[task->data[15]].invisible = 0;
+            gSprites[task->data[15]].invisible = FALSE;
         else
-            gSprites[task->data[15]].invisible = 1;
+            gSprites[task->data[15]].invisible = TRUE;
 
         if (++task->data[3] >= task->data[13])
         {
@@ -184,7 +184,7 @@ void sub_80D1808(u8 taskId)
             }
             else
             {
-                gSprites[task->data[15]].invisible = 0;
+                gSprites[task->data[15]].invisible = FALSE;
                 DestroyAnimVisualTask(taskId);
             }
         }
@@ -205,8 +205,8 @@ void sub_80D18D4(u8 taskId)
     task->data[7] = 0;
     task->data[8] = 0;
     task->data[13] = 0;
-    task->data[14] = GetBattlerSpriteCoord(gAnimBankAttacker, 0);
-    task->data[15] = GetBattlerSpriteCoord(gAnimBankAttacker, 1);
+    task->data[14] = GetBattlerSpriteCoord(gBattleAnimAttacker, 0);
+    task->data[15] = GetBattlerSpriteCoord(gBattleAnimAttacker, 1);
     task->func = sub_80D1930;
 }
 

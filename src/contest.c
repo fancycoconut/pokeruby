@@ -40,16 +40,16 @@ extern void sub_80C8A38(u8);
 extern void sub_80C8AD0(u8);
 extern void sub_80C8C80(u8);
 
-extern struct MusicPlayerInfo gMPlay_SE1;
+extern struct MusicPlayerInfo gMPlayInfo_SE1;
 extern u8 gBattleMonForms[];
 extern u8 gDisplayedStringBattle[];
 extern u16 gBattleTypeFlags;
-extern u8 gBankAttacker;
-extern u8 gBankTarget;
-extern u8 gBanksBySide[];
-extern u8 gBankSpriteIds[];
+extern u8 gBattlerAttacker;
+extern u8 gBattlerTarget;
+extern u8 gBattlerPositions[];
+extern u8 gBattlerSpriteIds[];
 extern struct Window gUnknown_03004210;
-extern u32 gContestRngValue;
+u32 gContestRngValue;
 
 extern struct SpriteTemplate gUnknown_02024E8C;
 extern const struct ContestPokemon gContestOpponents[60];
@@ -267,12 +267,12 @@ void SelectContestMoveBankTarget(u16);
 
 EWRAM_DATA u8 gUnknown_0203856C = 0;
 EWRAM_DATA struct ContestPokemon gContestMons[4] = {0};
-EWRAM_DATA s16 gUnknown_02038670[4] = {0};
+EWRAM_DATA s16 gContestMonConditions[4] = {0};
 EWRAM_DATA s16 gUnknown_02038678[4] = {0};
 EWRAM_DATA s16 gUnknown_02038680[4] = {0};
-EWRAM_DATA u16 gUnknown_02038688[4] = {0};
+EWRAM_DATA s16 gUnknown_02038688[4] = {0};
 EWRAM_DATA u8 gContestFinalStandings[4] = {0};  // What "place" each participant came in.
-EWRAM_DATA u8 gUnknown_02038694 = 0;
+EWRAM_DATA u8 gContestMonPartyIndex = 0;
 EWRAM_DATA u8 gContestPlayerMonIndex = 0;
 EWRAM_DATA u8 gUnknown_02038696[4] = {0};
 EWRAM_DATA u8 gIsLinkContest = 0;
@@ -293,12 +293,12 @@ void ResetContestGpuRegs(void)
 {
     u16 savedIme;
 
-    REG_DISPCNT = 0x40;
+    REG_DISPCNT = DISPCNT_MODE_0 | DISPCNT_OBJ_1D_MAP;
     savedIme = REG_IME;
     REG_IME = 0;
     REG_IE |= INTR_FLAG_VBLANK;
     REG_IME = savedIme;
-    REG_DISPSTAT = 8;
+    REG_DISPSTAT = DISPSTAT_VBLANK_INTR;
     REG_BG0CNT = 0x9800;
     REG_BG1CNT = 0x9E09;
     REG_BG2CNT = 0x9C00;
@@ -323,7 +323,6 @@ void ResetContestGpuRegs(void)
     gBattle_WIN1H = 0;
     gBattle_WIN1V = 0;
 }
-
 void LoadContestBgAfterMoveAnim(void)
 {
     s32 i;
@@ -474,14 +473,12 @@ void sub_80AB694(u8 taskId)
 
 void sub_80AB6B4(u8 taskId)
 {
-    gTasks[taskId].data[0]--;
-    if (gTasks[taskId].data[0] <= 0)
-    {
-        GetMultiplayerId();  // unused return value
-        DestroyTask(taskId);
-        gTasks[sContest.mainTaskId].func = sub_80AB960;
-        gRngValue = gContestRngValue;
-    }
+    if (--gTasks[taskId].data[0] > 0)
+        return;
+    GetMultiplayerId(); // unused return value
+    DestroyTask(taskId);
+    gTasks[sContest.mainTaskId].func = sub_80AB960;
+    gRngValue = gContestRngValue;
 }
 
 u8 sub_80AB70C(u8 *a)
@@ -528,14 +525,14 @@ u8 sub_80AB70C(u8 *a)
         CreateApplauseMeterSprite();
         sub_80B0324();
         sub_80B0518();
-        gBanksBySide[0] = 0;
-        gBanksBySide[1] = 1;
-        gBanksBySide[2] = 3;
-        gBanksBySide[3] = 2;
+        gBattlerPositions[0] = 0;
+        gBattlerPositions[1] = 1;
+        gBattlerPositions[2] = 3;
+        gBattlerPositions[3] = 2;
         gBattleTypeFlags = 0;
-        gBankAttacker = 2;
-        gBankTarget = 3;
-        gBankSpriteIds[gBankAttacker] = CreateJudgeSprite();
+        gBattlerAttacker = 2;
+        gBattlerTarget = 3;
+        gBattlerSpriteIds[gBattlerAttacker] = CreateJudgeSprite();
         sub_80B292C();
         break;
     default:
@@ -566,7 +563,7 @@ void sub_80AB9A0(u8 taskId)
         if (gTasks[taskId].data[1]++ <= 60)
             break;
         gTasks[taskId].data[1] = 0;
-        PlaySE12WithPanning(SE_C_MAKU_U, 0);
+        PlaySE12WithPanning(SE_CONTEST_CURTAIN_RISE, 0);
         gTasks[taskId].data[0]++;
         break;
     case 1:
@@ -912,7 +909,7 @@ void debug_sub_80BA054(u8 taskId)
 	gSprites[r6].pos2.x = 120;
 	gSprites[r6].callback = sub_80AD8FC;
 	gTasks[taskId].data[2] = r6;
-	gBankSpriteIds[gBankAttacker] = r6;
+	gBattlerSpriteIds[gBattlerAttacker] = r6;
 	gTasks[taskId].data[3] = 0;
 	gTasks[taskId].data[0]++;
 	sContest.unk1925E = 0;
@@ -1124,7 +1121,7 @@ void sub_80AC2CC(u8 taskId)
         gSprites[spriteId].pos2.x = 120;
         gSprites[spriteId].callback = sub_80AD8FC;
         gTasks[taskId].data[2] = spriteId;
-        gBankSpriteIds[gBankAttacker] = spriteId;
+        gBattlerSpriteIds[gBattlerAttacker] = spriteId;
         sub_80B0BC4(sub_80B09E4(sContest.unk19215), FALSE);
         gTasks[taskId].data[0] = 4;
         return;
@@ -1301,7 +1298,7 @@ void sub_80AC2CC(u8 taskId)
         return;
     case 50:
         if (sub_80AF038(r7))
-            PlaySE(SE_C_PASI);
+            PlaySE(SE_CONTEST_ICON_CHANGE);
         gTasks[taskId].data[0] = 25;
         return;
     case 25:
@@ -1387,9 +1384,9 @@ void sub_80AC2CC(u8 taskId)
                 break;
         }
         if (sub_80AF038(i))
-            PlaySE(SE_C_PASI);
+            PlaySE(SE_CONTEST_ICON_CHANGE);
         else
-            PlaySE(SE_C_SYU);
+            PlaySE(SE_CONTEST_ICON_CLEAR);
         if (sContestantStatus[i].judgesAttentionWasRemoved)
         {
             sub_80B03A8(i);
@@ -1570,7 +1567,7 @@ void sub_80AC2CC(u8 taskId)
         {
         case 0:
             sub_80B1EA8(-1, 1);
-            PlayFanfare(MUS_ME_ZANNEN);
+            PlayFanfare(MUS_TOO_BAD);
             gTasks[taskId].data[10]++;
             break;
         case 1:
@@ -1615,7 +1612,7 @@ void sub_80AC2CC(u8 taskId)
             if (!sContest.unk1920B_0)
             {
                 sub_80B1DDC();
-                PlaySE(SE_W227B);
+                PlaySE(SE_M_ENCORE2);
                 sub_80B1CBC(1);
                 gTasks[taskId].data[10]++;
             }
@@ -1999,7 +1996,7 @@ void sub_80ADE54(u8 taskId)
         sub_80B2184();
         gBattle_BG1_X = 0;
         gBattle_BG1_Y = 160;
-        PlaySE12WithPanning(SE_C_MAKU_D, 0);
+        PlaySE12WithPanning(SE_CONTEST_CURTAIN_FALL, 0);
         gTasks[taskId].data[0] = 0;
         gTasks[taskId].func = sub_80ADEAC;
     }
@@ -2123,9 +2120,9 @@ void Contest_CreatePlayerMon(u8 partyIndex)
     }
     memcpy(gContestMons[gContestPlayerMonIndex].trainerName, name, 8);
     if (gSaveBlock2.playerGender == MALE)
-        gContestMons[gContestPlayerMonIndex].trainerGfxId = EVENT_OBJ_GFX_LINK_BRENDAN;
+        gContestMons[gContestPlayerMonIndex].trainerGfxId = OBJ_EVENT_GFX_LINK_BRENDAN;
     else
-        gContestMons[gContestPlayerMonIndex].trainerGfxId = EVENT_OBJ_GFX_LINK_MAY;
+        gContestMons[gContestPlayerMonIndex].trainerGfxId = OBJ_EVENT_GFX_LINK_MAY;
     gContestMons[gContestPlayerMonIndex].flags = 0;
     gContestMons[gContestPlayerMonIndex].unk2C[0] = 0;
     gContestMons[gContestPlayerMonIndex].species = GetMonData(&gPlayerParty[partyIndex], MON_DATA_SPECIES);
@@ -2242,11 +2239,11 @@ void Contest_InitAllPokemon(u8 contestType, u8 rank)
     asm(""::"r"(i));
 #endif
 
-    Contest_CreatePlayerMon(gUnknown_02038694);
+    Contest_CreatePlayerMon(gContestMonPartyIndex);
 }
 
 // GetContestAvailability?
-u8 sub_80AE47C(struct Pokemon *pkmn)
+u8 CanMonParticipateInContest(struct Pokemon *pkmn)
 {
     u8 ribbon;
     u8 retVal;
@@ -2380,7 +2377,7 @@ void sub_80AE6E4(u8 a, u8 b)
       1);
 }
 
-u16 sub_80AE770(u8 a, u8 b)
+u16 InitContestMonConditionI(u8 a, u8 b)
 {
     u8 r5;
     u8 r4;
@@ -2388,27 +2385,27 @@ u16 sub_80AE770(u8 a, u8 b)
 
     switch (b)
     {
-    case 0:
+    case CONTEST_CATEGORY_COOL:
         r5 = gContestMons[a].cool;
         r4 = gContestMons[a].tough;
         r3 = gContestMons[a].beauty;
         break;
-    case 1:
+    case CONTEST_CATEGORY_BEAUTY:
         r5 = gContestMons[a].beauty;
         r4 = gContestMons[a].cool;
         r3 = gContestMons[a].cute;
         break;
-    case 2:
+    case CONTEST_CATEGORY_CUTE:
         r5 = gContestMons[a].cute;
         r4 = gContestMons[a].beauty;
         r3 = gContestMons[a].smart;
         break;
-    case 3:
+    case CONTEST_CATEGORY_SMART:
         r5 = gContestMons[a].smart;
         r4 = gContestMons[a].cute;
         r3 = gContestMons[a].tough;
         break;
-    case 4:
+    case CONTEST_CATEGORY_TOUGH:
     default:
         r5 = gContestMons[a].tough;
         r4 = gContestMons[a].smart;
@@ -2418,12 +2415,12 @@ u16 sub_80AE770(u8 a, u8 b)
     return r5 + (r4 + r3 + gContestMons[a].sheen) / 2;
 }
 
-void sub_80AE82C(u8 a)
+void InitContestMonConditions(u8 a)
 {
     u8 i;
 
     for (i = 0; i < 4; i++)
-        gUnknown_02038670[i] = sub_80AE770(i, a);
+        gContestMonConditions[i] = InitContestMonConditionI(i, a);
 }
 
 u8 CreateJudgeSprite(void)
@@ -2459,7 +2456,7 @@ u8 unref_sub_80AE908(void)
       &gMonFrontPicTable[species],
       gMonFrontPicCoords[species].coords,
       gMonFrontPicCoords[species].y_offset,
-      (void *)0x02000000,
+      (void *)EWRAM,
       gUnknown_081FAF4C[1],
       species);
     LoadCompressedPalette(gMonPaletteTable[species].data, 0x110, 32);
@@ -2485,7 +2482,7 @@ u8 sub_80AE9FC(u16 species, u32 otId, u32 personality)
       &gMonBackPicTable[species],
       gMonBackPicCoords[species].coords,
       gMonBackPicCoords[species].y_offset,
-      0x02000000,
+      EWRAM,
       gUnknown_081FAF4C[0],
       species,
       personality);
@@ -2673,7 +2670,7 @@ bool8 sub_80AEE54(u8 a, u8 b)
         }
         if (b != 0)
         {
-            PlaySE(SE_EXPMAX);
+            PlaySE(SE_EXP_MAX);
             sContestantStatus[a].conditionMod = 0;
         }
     }
@@ -2688,7 +2685,7 @@ bool8 sub_80AEE54(u8 a, u8 b)
         }
         if (b != 0)
         {
-            PlaySE(SE_FU_ZAKU2);
+            PlaySE(SE_CONTEST_CONDITION_LOSE);
             sContestantStatus[a].conditionMod = 0;
         }
     }
@@ -3024,7 +3021,7 @@ bool8 unref_sub_80AF5D0(u8 a, u8 b)
 void sub_80AF630(u8 a)
 {
     gUnknown_02038688[a] = sub_80AF688(a);
-    gUnknown_02038678[a] = gUnknown_02038670[a] + gUnknown_02038688[a];
+    gUnknown_02038678[a] = gContestMonConditions[a] + gUnknown_02038688[a];
 }
 
 void sub_80AF668(void)
@@ -3067,7 +3064,7 @@ void DetermineFinalStandings(void)
     for (i = 0; i < 4; i++)
     {
         sp8[i].unk0 = gUnknown_02038678[i];
-        sp8[i].unk4 = gUnknown_02038670[i];
+        sp8[i].unk4 = gContestMonConditions[i];
         sp8[i].unk8 = sp0[i];
         sp8[i].unkC = i;
     }
@@ -3365,9 +3362,9 @@ void sub_80AFC74(u8 taskId)
         CpuFill16(r6, (void *)(VRAM + 0xC000 + (0x56 + r5 + gUnknown_02038696[r7] * 160) * 2), 2);
         if (r1 > 0)
         {
-            PlaySE(SE_C_GAJI);
-            m4aMPlayImmInit(&gMPlay_SE1);
-            m4aMPlayPitchControl(&gMPlay_SE1, 0xFFFF, r10 * 256);
+            PlaySE(SE_CONTEST_HEART);
+            m4aMPlayImmInit(&gMPlayInfo_SE1);
+            m4aMPlayPitchControl(&gMPlayInfo_SE1, 0xFFFF, r10 * 256);
         }
         else
         {
@@ -3578,7 +3575,7 @@ void sub_80B02A8(struct Sprite *sprite)
     StartSpriteAnim(sprite, sContestantStatus[sprite->data[0]].unkB_0);
     StartSpriteAffineAnim(sprite, 2);
     sprite->callback = sub_80B02F4;
-    PlaySE(SE_JYUNI);
+    PlaySE(SE_CONTEST_PLACE);
 }
 
 void sub_80B02F4(struct Sprite *sprite)
@@ -3679,28 +3676,22 @@ void sub_80B0588(void)
         sub_80B05A4(i);
 }
 
-// TODO: Try to write this better
 void sub_80B05A4(u8 a)
 {
-    u32 var;
-    u32 r0;
-
     sub_80B0548(a);
 
     // 2-byte DMA copy? Why?
 
-    r0 = a + 5;
     DmaCopy16Defvars(
       3,
-      gPlttBufferUnfaded + r0 * 16 + 10,
-      gPlttBufferFaded   + r0 * 16 + 10,
+      &gPlttBufferUnfaded[16 * (5 + a) + 10],
+      &gPlttBufferFaded[16 * (5 + a) + 10],
       2);
 
-    var = (a + 5) * 16 + 12 + a;
     DmaCopy16Defvars(
       3,
-      gPlttBufferUnfaded + var,
-      gPlttBufferFaded + var,
+      &gPlttBufferUnfaded[16 * (5 + a) + 12 + a],
+      &gPlttBufferFaded[16 * (5 + a) + 12 + a],
       2);
 }
 
@@ -3758,6 +3749,7 @@ u8 unref_sub_80B06E0(u8 *a)
 void sub_80B0748(u8 taskId)
 {
     u8 i;
+    u8 r4;
     u8 r4_2;
     u8 r1;
     u8 r7;
@@ -4264,9 +4256,9 @@ void sub_80B0BC4(u8 a, bool8 b)
     gSprites[a].callback = sub_80B0C5C;
     gSprites[r5].callback = SpriteCallbackDummy;
     if (b == FALSE)
-        PlaySE(SE_C_PIKON);
+        PlaySE(SE_CONTEST_MONS_TURN);
     else
-        PlaySE(SE_PC_LOGON);
+        PlaySE(SE_PC_LOGIN);
 }
 
 void sub_80B0C5C(struct Sprite *sprite)
@@ -4433,8 +4425,8 @@ void sub_80B0F28(u8 a)
             gUnknown_02038696[i] = i;
             for (r4 = 0; r4 < i; r4++)
             {
-                if (gUnknown_02038670[gUnknown_02038696[r4]] < gUnknown_02038670[i]
-                 || (gUnknown_02038670[gUnknown_02038696[r4]] == gUnknown_02038670[i] && sp4[gUnknown_02038696[r4]] < sp4[i]))
+                if (gContestMonConditions[gUnknown_02038696[r4]] < gContestMonConditions[i]
+                 || (gContestMonConditions[gUnknown_02038696[r4]] == gContestMonConditions[i] && sp4[gUnknown_02038696[r4]] < sp4[i]))
                 {
                     for (r2 = i; r2 > r4; r2--)
                         gUnknown_02038696[r2] = gUnknown_02038696[r2 - 1];
@@ -4731,36 +4723,36 @@ void sub_80B1710(u8 a)
     case 0:
     case 1:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0];
-        PlaySE(SE_HAZURE);
+        PlaySE(SE_FAILURE);
         break;
     case 2:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 4;
-        PlaySE(SE_SEIKAI);
+        PlaySE(SE_SUCCESS);
         break;
     case 3:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 8;
-        PlaySE(SE_SEIKAI);
+        PlaySE(SE_SUCCESS);
         break;
     case 4:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 12;
-        PlaySE(SE_TK_WARPIN);
+        PlaySE(SE_WARP_IN);
         break;
     case 5:  // exactly the same as case 4
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 12;
-        PlaySE(SE_TK_WARPIN);
+        PlaySE(SE_WARP_IN);
         break;
     case 6:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 16;
-        PlaySE(SE_TK_WARPIN);
+        PlaySE(SE_WARP_IN);
         break;
     case 8:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 24;
-        PlaySE(SE_W215);
+        PlaySE(SE_M_HEAL_BELL);
         break;
     case 7:
     default:
         gSprites[spriteId].oam.tileNum = gSprites[spriteId].data[0] + 20;
-        PlaySE(SE_TK_WARPIN);
+        PlaySE(SE_WARP_IN);
         break;
     }
     gSprites[spriteId].data[1] = 0;
@@ -5088,7 +5080,7 @@ void sub_80B20C4(void)
             *(u16 *)(VRAM + 0xC000 + r4 * 64 + 0x2A) = r0 + 1;
             *(u16 *)(VRAM + 0xC000 + (r4 + 1) * 64 + 0x28) = r0 + 16;
             *(u16 *)(VRAM + 0xC000 + (r4 + 1) * 64 + 0x2A) = r0 + 17;
-            PlaySE(SE_C_PASI);
+            PlaySE(SE_CONTEST_ICON_CHANGE);
         }
     }
 }
@@ -5156,7 +5148,7 @@ void sub_80B237C(u8 taskId)
 {
     gBattle_BG1_X = 0;
     gBattle_BG1_Y = DISPLAY_HEIGHT;
-    PlaySE12WithPanning(SE_C_MAKU_D, 0);
+    PlaySE12WithPanning(SE_CONTEST_CURTAIN_FALL, 0);
     gTasks[taskId].func = sub_80B23BC;
 }
 
@@ -5268,7 +5260,7 @@ void sub_80B25A4(u8 taskId)
     else
     {
         gTasks[taskId].data[2] = 0;
-        PlaySE12WithPanning(SE_C_MAKU_U, 0);
+        PlaySE12WithPanning(SE_CONTEST_CURTAIN_RISE, 0);
         gTasks[taskId].func = sub_80B2508;
     }
 }
@@ -5393,14 +5385,14 @@ void sub_80B28F0(u8 a)
 
 void sub_80B292C(void)
 {
-    gBankSpriteIds[3] = CreateInvisibleSpriteWithCallback(SpriteCallbackDummy);
-    InitSpriteAffineAnim(&gSprites[gBankSpriteIds[gBankTarget]]);
+    gBattlerSpriteIds[3] = CreateInvisibleSpriteWithCallback(SpriteCallbackDummy);
+    InitSpriteAffineAnim(&gSprites[gBattlerSpriteIds[gBattlerTarget]]);
     sub_80B2968();
 }
 
 void sub_80B2968(void)
 {
-    struct Sprite *sprite = &gSprites[gBankSpriteIds[3]];
+    struct Sprite *sprite = &gSprites[gBattlerSpriteIds[3]];
 
     sprite->pos2.x = 0;
     sprite->pos2.y = 0;
@@ -5415,14 +5407,14 @@ void SelectContestMoveBankTarget(u16 move)
     {
     case TARGET_UNK2:
     case TARGET_USER:
-        gBankTarget = 2;
+        gBattlerTarget = 2;
         break;
     case TARGET_SELECTED_POKEMON:
     case TARGET_RANDOM:
     case TARGET_BOTH_ENEMIES:
     case TARGET_ALL_EXCEPT_USER:
     default:
-        gBankTarget = 3;
+        gBattlerTarget = 3;
         break;
     }
 }

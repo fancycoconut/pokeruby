@@ -12,6 +12,8 @@
 #include "item.h"
 #include "pokemon_summary_screen.h"
 #include "pokemon_storage_system.h"
+#include "sound.h"
+#include "constants/songs.h"
 
 // Static type declarations
 
@@ -30,8 +32,8 @@ EWRAM_DATA u8 unk_2038790 = 0;
 EWRAM_DATA u32 unk_2038794 = 0;
 EWRAM_DATA u32 unk_2038798 = 0;
 #endif
-EWRAM_DATA s8 gUnknown_020384E4 = 0;
-EWRAM_DATA s8 gUnknown_020384E5 = 0;
+EWRAM_DATA s8 sBoxCursorArea = 0;
+EWRAM_DATA s8 sBoxCursorPosition = 0;
 EWRAM_DATA bool8 gUnknown_020384E6 = FALSE;
 EWRAM_DATA u8 gUnknown_020384E7 = 0;
 EWRAM_DATA u8 gUnknown_020384E8 = 0;
@@ -44,8 +46,8 @@ EWRAM_DATA struct UnkStruct_2000020 *gUnknown_020384EC = NULL;
 void sub_809900C(u8 boxId, s8 a1);
 s8 sub_8099D90(u8 boxId);
 void sub_8099EB0(u8 boxId, s8 a1);
-void sub_8099F58(u16 *vdest, const u16 *src, s8 a2, u8 a3);
-void sub_809A14C(u16 *vdest);
+void CopyWallpaperTilemap(u16 *buffer, const u16 *tilemap, s8 direction, u8 offset);
+void ClearLowestWallpaperTiles(u16 *buffer);
 void sub_809A23C(u8 boxId);
 void sub_809A3D0(u8 boxId, s8 a1);
 void sub_809A598(void);
@@ -66,9 +68,9 @@ bool8 sub_809B358(void);
 void sub_809B384(void);
 void sub_809B3E0(void);
 void sub_809B44C(u8 a0, u8 a1);
-void diegohint2(u8 a0, u8 a1);
+void SetPlacedMonData(u8 a0, u8 a1);
 void sub_809B548(u8 a0, u8 a1);
-void diegohint1(u8 a0, u8 a1);
+void SetShiftedMonData(u8 a0, u8 a1);
 bool8 sub_809BF2C(void);
 void sub_809BF74(void);
 void sub_809C028(void);
@@ -442,448 +444,169 @@ void sub_8099EB0(u8 boxId, s8 a1)
     if (a1)
     {
         gPokemonStorageSystemPtr->unk_08ba = gPokemonStorageSystemPtr->unk_08ba ? FALSE : TRUE;
-        sub_809A14C(BG_SCREEN_ADDR(26));
+        ClearLowestWallpaperTiles(BG_SCREEN_ADDR(26));
     }
     wallpaperTable = gWallpaperTable +gPokemonStorage.wallpaper[boxId];
     LoadPalette(wallpaperTable->palettes, gPokemonStorageSystemPtr->unk_08ba * 0x30 + 0x40, 0x60);
     LZ77UnCompWram(wallpaperTable->tileMap, gPokemonStorageSystemPtr->unk_0d62);
-    sub_8099F58(BG_SCREEN_ADDR(26), gPokemonStorageSystemPtr->unk_0d62, a1, gPokemonStorageSystemPtr->unk_08ba);
+    CopyWallpaperTilemap(BG_SCREEN_ADDR(26), gPokemonStorageSystemPtr->unk_0d62, a1, gPokemonStorageSystemPtr->unk_08ba);
     LZ77UnCompVram(wallpaperTable->tiles, BG_CHAR_ADDR(2) + (gPokemonStorageSystemPtr->unk_08ba << 13));
 }
 
-#ifdef NONMATCHING
-void sub_8099F58(u16 *vdest, const u16 *src, s8 a2, u8 a3)
+/*
+    Copies the wallpaper rectangle tilemap to a buffer,
+    depending on the wallpaper type.
+
+    - buffer    : Where to copy the wallpaper to.
+    - tilemap   : The wallpaper tilemap to copy.
+    - direction : The direction of the wallpaper.
+    - offset    : The offset of the wallpaper tilemap.
+
+    Also depends on stored BG2 X variable in PSS.
+*/
+void CopyWallpaperTilemap(u16 *buffer, const u16 *tilemap, s8 direction, u8 offset)
 {
-    s16 r6;
-    s16 r3;
-    u16 sp0 = a3 << 8;
-    u16 sp4 = (a3 * 3 + 4) << 12;
-    u16 *r4;
-    u16 *r7;
-    u16 i;
-    u16 j;
-    s16 sp8 = ((gPokemonStorageSystemPtr->unk_08b4 >> 3) + 10 + a2 * 24) & 0x3f;
-    if (sp8 < 13)
+    u16 *dest; // For either all of the wallpaper tilemap, or the first half of it.
+    u16 *dest2; // The second half of wallpaper tilemap; used in case of two halves.
+    u16 *fillDest; // For blanking; used when direction is set.
+
+    u16 x, y; // Temps for copying the tilemap.
+
+    // Temps for copying the tile and palette metadata of the wallpaper.
+    u16 tileMeta;
+    u16 tileOffset = offset * 256;
+    u16 paletteMeta;
+    u16 paletteOffset = (offset * 3 + 4) << 12;
+
+    s16 rectWidth; // The width of the wallpaper, or it's first half.
+    s16 rectWidth2; // Used in case of two halves.
+    s16 rectX = ((gPokemonStorageSystemPtr->unk_08b4 / 8 + 10) + (direction * 24)) & 0x3F;
+
+    s16 fillX; // For blanking; used when direction is set.
+
+    /*
+        Bull**** agbcc behavior discovered here
+        while attempting to match this function:
+        x + (y + z) is NOT the same as x + y + z.
+        Even though it SHOULDN'T make a difference.
+
+        Rather, it's the same as x + z + y. That's
+        old codegen for you.
+    */
+    if (rectX < 13)
     {
-        r6 = 20;
-        r3 = 0;
-        r4 = vdest + sp8 + 0x40;
-        r7 = NULL;
+        // Copy the wallpaper in full.
+        rectWidth = 20;
+        rectWidth2 = 0;
+        dest = buffer + (rectX + 64);
+        dest2 = NULL;
     }
-    else if (sp8 < 32)
+    else if (rectX < 32)
     {
-        r6 = 32 - sp8;
-        r3 = 20 - r6;
-        r4 = vdest + sp8 + 0x40;
-        r7 = vdest + 0x440;
+        // Split copying the wallpaper into two operations.
+        rectWidth = 32 - rectX;
+        rectWidth2 = 20 - rectWidth;
+        dest = buffer + (rectX + 64);
+        dest2 = buffer + 0x440;
     }
-    else if (sp8 < 45)
+    else if (rectX < 45)
     {
-        r6 = 20;
-        r3 = 0;
-        r4 = vdest + sp8 + 0x420;
-        r7 = NULL;
+        // Copy the wallpaper in full.
+        rectWidth = 20;
+        rectWidth2 = 0;
+        dest = buffer + (rectX + 0x420);
+        dest2 = NULL;
     }
     else
     {
-        r6 = 64 - sp8;
-        r3 = 20 - r6;
-        r4 = vdest + sp8 + 0x420;
-        r7 = vdest + 0x40;
+        // Split copying the wallpaper into two operations.
+        rectWidth = 64 - rectX;
+        rectWidth2 = 20 - rectWidth;
+        dest = buffer + (rectX + 0x420);
+        dest2 = buffer + 0x40;
     }
-    for (i = 0; i < 18; i++)
-    {
-        for (j = 0; j < r6; j++)
-        {
-            u16 tile = ((*src & 0xfff) + sp0) | ((*src & 0xf000) + sp4);
-            r4[j] = tile;
-            src++;
-        }
-        for (j = 0; j < r3; j++)
-        {
-            u16 tile = ((*src & 0xfff) + sp0) | ((*src & 0xf000) + sp4);
-            r7[j] = tile;
-            src++;
-        }
-        r4 += 0x20;
-        r7 += 0x20;
-    }
-    if (a2)
-    {
-        s16 r4_2;
-        u16 *r2;
-        if (a2 > 0)
-            r4_2 = (sp8 + 20) & 0x3f;
-        else
-            r4_2 = (sp8 - 4) & 0x3f;
-        r2 = r4_2 < 0x20 ? vdest + r4_2 + 0x40 : vdest + r4_2 + 0x420;
-        for (i = 0; i < 4; i++)
-        {
-            for (j = 0; j < 18; j++)
-            {
-                *r2 = 0;
-                r2 += 0x20;
-            }
-            r4_2++;
-            r4_2 &= 0x3f;
-            r2 = r4_2 < 0x20 ? vdest + r4_2 + 0x40 : vdest + r4_2 + 0x420;
-        }
-    }
-}
-#else
-NAKED void sub_8099F58(u16 *vdest, const u16 *src, s8 a2, u8 a3)
-{
-    asm_unified("\tpush {r4-r7,lr}\n"
-                    "\tmov r7, r10\n"
-                    "\tmov r6, r9\n"
-                    "\tmov r5, r8\n"
-                    "\tpush {r5-r7}\n"
-                    "\tsub sp, 0x20\n"
-                    "\tmov r9, r0\n"
-                    "\tadds r5, r1, 0\n"
-                    "\tlsls r2, 24\n"
-                    "\tlsls r3, 24\n"
-                    "\tlsrs r3, 24\n"
-                    "\tlsls r0, r3, 8\n"
-                    "\tstr r0, [sp]\n"
-                    "\tlsls r0, r3, 1\n"
-                    "\tadds r0, r3\n"
-                    "\tadds r0, 0x4\n"
-                    "\tlsls r0, 28\n"
-                    "\tlsrs r0, 16\n"
-                    "\tstr r0, [sp, 0x4]\n"
-                    "\tldr r0, _08099FB8 @ =gPokemonStorageSystemPtr\n"
-                    "\tldr r0, [r0]\n"
-                    "\tldr r1, _08099FBC @ =0x000008b4\n"
-                    "\tadds r0, r1\n"
-                    "\tldrh r1, [r0]\n"
-                    "\tlsrs r1, 3\n"
-                    "\tadds r1, 0xA\n"
-                    "\tlsrs r0, r2, 24\n"
-                    "\tmov r8, r0\n"
-                    "\tasrs r2, 24\n"
-                    "\tlsls r0, r2, 1\n"
-                    "\tadds r0, r2\n"
-                    "\tlsls r0, 3\n"
-                    "\tadds r1, r0\n"
-                    "\tmovs r0, 0x3F\n"
-                    "\tands r1, r0\n"
-                    "\tstr r1, [sp, 0x8]\n"
-                    "\tadds r2, r1, 0\n"
-                    "\tcmp r2, 0xC\n"
-                    "\tbgt _08099FC0\n"
-                    "\tmovs r6, 0x14\n"
-                    "\tmovs r3, 0\n"
-                    "\tlsls r0, r2, 1\n"
-                    "\tadds r0, 0x80\n"
-                    "\tmov r1, r9\n"
-                    "\tadds r4, r1, r0\n"
-                    "\tmovs r7, 0\n"
-                    "\tb _0809A020\n"
-                    "\t.align 2, 0\n"
-                    "_08099FB8: .4byte gPokemonStorageSystemPtr\n"
-                    "_08099FBC: .4byte 0x000008b4\n"
-                    "_08099FC0:\n"
-                    "\tcmp r2, 0x1F\n"
-                    "\tbgt _08099FE6\n"
-                    "\tmovs r0, 0x20\n"
-                    "\tsubs r0, r2\n"
-                    "\tlsls r0, 16\n"
-                    "\tmovs r1, 0x14\n"
-                    "\tlsrs r6, r0, 16\n"
-                    "\tasrs r0, 16\n"
-                    "\tsubs r1, r0\n"
-                    "\tlsls r1, 16\n"
-                    "\tlsrs r3, r1, 16\n"
-                    "\tlsls r0, r2, 1\n"
-                    "\tadds r0, 0x80\n"
-                    "\tmov r2, r9\n"
-                    "\tadds r4, r2, r0\n"
-                    "\tmovs r7, 0x88\n"
-                    "\tlsls r7, 4\n"
-                    "\tadd r7, r9\n"
-                    "\tb _0809A020\n"
-                    "_08099FE6:\n"
-                    "\tcmp r2, 0x2C\n"
-                    "\tbgt _08099FFE\n"
-                    "\tmovs r6, 0x14\n"
-                    "\tmovs r3, 0\n"
-                    "\tlsls r0, r2, 1\n"
-                    "\tmovs r1, 0x84\n"
-                    "\tlsls r1, 4\n"
-                    "\tadds r0, r1\n"
-                    "\tmov r2, r9\n"
-                    "\tadds r4, r2, r0\n"
-                    "\tmovs r7, 0\n"
-                    "\tb _0809A020\n"
-                    "_08099FFE:\n"
-                    "\tmovs r0, 0x40\n"
-                    "\tsubs r0, r2\n"
-                    "\tlsls r0, 16\n"
-                    "\tmovs r1, 0x14\n"
-                    "\tlsrs r6, r0, 16\n"
-                    "\tasrs r0, 16\n"
-                    "\tsubs r1, r0\n"
-                    "\tlsls r1, 16\n"
-                    "\tlsrs r3, r1, 16\n"
-                    "\tlsls r0, r2, 1\n"
-                    "\tmovs r1, 0x84\n"
-                    "\tlsls r1, 4\n"
-                    "\tadds r0, r1\n"
-                    "\tmov r2, r9\n"
-                    "\tadds r4, r2, r0\n"
-                    "\tmov r7, r9\n"
-                    "\tadds r7, 0x80\n"
-                    "_0809A020:\n"
-                    "\tmovs r1, 0\n"
-                    "\tmov r0, r8\n"
-                    "\tlsls r0, 24\n"
-                    "\tstr r0, [sp, 0x14]\n"
-                    "\tlsls r0, r6, 16\n"
-                    "\tasrs r0, 16\n"
-                    "\tmov r8, r0\n"
-                    "\tlsls r3, 16\n"
-                    "\tstr r3, [sp, 0xC]\n"
-                    "\tasrs r2, r3, 16\n"
-                    "\tstr r2, [sp, 0x10]\n"
-                    "_0809A036:\n"
-                    "\tmovs r3, 0\n"
-                    "\tadds r0, r4, 0\n"
-                    "\tadds r0, 0x40\n"
-                    "\tstr r0, [sp, 0x18]\n"
-                    "\tadds r2, r7, 0\n"
-                    "\tadds r2, 0x40\n"
-                    "\tstr r2, [sp, 0x1C]\n"
-                    "\tadds r1, 0x1\n"
-                    "\tmov r10, r1\n"
-                    "\tcmp r3, r8\n"
-                    "\tbge _0809A07A\n"
-                    "\tldr r0, _0809A0D4 @ =0x00000fff\n"
-                    "\tmov r12, r0\n"
-                    "\tmovs r6, 0xF0\n"
-                    "\tlsls r6, 8\n"
-                    "_0809A054:\n"
-                    "\tldrh r2, [r5]\n"
-                    "\tmov r0, r12\n"
-                    "\tands r0, r2\n"
-                    "\tldr r1, [sp]\n"
-                    "\tadds r0, r1, r0\n"
-                    "\tadds r1, r6, 0\n"
-                    "\tands r1, r2\n"
-                    "\tldr r2, [sp, 0x4]\n"
-                    "\tadds r1, r2, r1\n"
-                    "\torrs r1, r0\n"
-                    "\tlsls r0, r3, 1\n"
-                    "\tadds r0, r4\n"
-                    "\tstrh r1, [r0]\n"
-                    "\tadds r5, 0x2\n"
-                    "\tadds r0, r3, 0x1\n"
-                    "\tlsls r0, 16\n"
-                    "\tlsrs r3, r0, 16\n"
-                    "\tcmp r3, r8\n"
-                    "\tblt _0809A054\n"
-                    "_0809A07A:\n"
-                    "\tmovs r3, 0\n"
-                    "\tldr r0, [sp, 0x10]\n"
-                    "\tcmp r3, r0\n"
-                    "\tbge _0809A0B4\n"
-                    "\tldr r1, _0809A0D4 @ =0x00000fff\n"
-                    "\tmov r12, r1\n"
-                    "\tmovs r6, 0xF0\n"
-                    "\tlsls r6, 8\n"
-                    "\tldr r2, [sp, 0xC]\n"
-                    "\tasrs r4, r2, 16\n"
-                    "_0809A08E:\n"
-                    "\tldrh r2, [r5]\n"
-                    "\tmov r0, r12\n"
-                    "\tands r0, r2\n"
-                    "\tldr r1, [sp]\n"
-                    "\tadds r0, r1, r0\n"
-                    "\tadds r1, r6, 0\n"
-                    "\tands r1, r2\n"
-                    "\tldr r2, [sp, 0x4]\n"
-                    "\tadds r1, r2, r1\n"
-                    "\torrs r1, r0\n"
-                    "\tlsls r0, r3, 1\n"
-                    "\tadds r0, r7\n"
-                    "\tstrh r1, [r0]\n"
-                    "\tadds r5, 0x2\n"
-                    "\tadds r0, r3, 0x1\n"
-                    "\tlsls r0, 16\n"
-                    "\tlsrs r3, r0, 16\n"
-                    "\tcmp r3, r4\n"
-                    "\tblt _0809A08E\n"
-                    "_0809A0B4:\n"
-                    "\tldr r4, [sp, 0x18]\n"
-                    "\tldr r7, [sp, 0x1C]\n"
-                    "\tmov r1, r10\n"
-                    "\tlsls r0, r1, 16\n"
-                    "\tlsrs r1, r0, 16\n"
-                    "\tcmp r1, 0x11\n"
-                    "\tbls _0809A036\n"
-                    "\tldr r0, [sp, 0x14]\n"
-                    "\tasrs r2, r0, 24\n"
-                    "\tcmp r2, 0\n"
-                    "\tbeq _0809A13A\n"
-                    "\tcmp r2, 0\n"
-                    "\tble _0809A0D8\n"
-                    "\tldr r1, [sp, 0x8]\n"
-                    "\tadds r1, 0x14\n"
-                    "\tb _0809A0DC\n"
-                    "\t.align 2, 0\n"
-                    "_0809A0D4: .4byte 0x00000fff\n"
-                    "_0809A0D8:\n"
-                    "\tldr r1, [sp, 0x8]\n"
-                    "\tsubs r1, 0x4\n"
-                    "_0809A0DC:\n"
-                    "\tmovs r0, 0x3F\n"
-                    "\tands r1, r0\n"
-                    "\tadds r4, r1, 0\n"
-                    "\tadds r0, r4, 0\n"
-                    "\tcmp r0, 0x1F\n"
-                    "\tbgt _0809A0EE\n"
-                    "\tlsls r0, 1\n"
-                    "\tadds r0, 0x80\n"
-                    "\tb _0809A0F6\n"
-                    "_0809A0EE:\n"
-                    "\tlsls r0, 1\n"
-                    "\tmovs r2, 0x84\n"
-                    "\tlsls r2, 4\n"
-                    "\tadds r0, r2\n"
-                    "_0809A0F6:\n"
-                    "\tmov r1, r9\n"
-                    "\tadds r2, r1, r0\n"
-                    "\tmovs r3, 0\n"
-                    "\tmovs r6, 0\n"
-                    "_0809A0FE:\n"
-                    "\tmovs r1, 0\n"
-                    "\tadds r5, r3, 0x1\n"
-                    "\tlsls r3, r4, 16\n"
-                    "_0809A104:\n"
-                    "\tstrh r6, [r2]\n"
-                    "\tadds r2, 0x40\n"
-                    "\tadds r0, r1, 0x1\n"
-                    "\tlsls r0, 16\n"
-                    "\tlsrs r1, r0, 16\n"
-                    "\tcmp r1, 0x11\n"
-                    "\tbls _0809A104\n"
-                    "\tasrs r0, r3, 16\n"
-                    "\tadds r4, r0, 0x1\n"
-                    "\tmovs r0, 0x3F\n"
-                    "\tands r4, r0\n"
-                    "\tadds r0, r4, 0\n"
-                    "\tcmp r0, 0x1F\n"
-                    "\tbgt _0809A126\n"
-                    "\tlsls r0, 1\n"
-                    "\tadds r0, 0x80\n"
-                    "\tb _0809A12E\n"
-                    "_0809A126:\n"
-                    "\tlsls r0, 1\n"
-                    "\tmovs r2, 0x84\n"
-                    "\tlsls r2, 4\n"
-                    "\tadds r0, r2\n"
-                    "_0809A12E:\n"
-                    "\tmov r1, r9\n"
-                    "\tadds r2, r1, r0\n"
-                    "\tlsls r0, r5, 16\n"
-                    "\tlsrs r3, r0, 16\n"
-                    "\tcmp r3, 0x3\n"
-                    "\tbls _0809A0FE\n"
-                    "_0809A13A:\n"
-                    "\tadd sp, 0x20\n"
-                    "\tpop {r3-r5}\n"
-                    "\tmov r8, r3\n"
-                    "\tmov r9, r4\n"
-                    "\tmov r10, r5\n"
-                    "\tpop {r4-r7}\n"
-                    "\tpop {r0}\n"
-                    "\tbx r0");
-}
-#endif
 
-#ifdef NONMATCHING
-void sub_809A14C(u16 *vdest)
-{
-    u16 *r2;
-    u16 i;
-    int r3 = ((gPokemonStorageSystemPtr->unk_08b4 >> 3) + 30) & 0x3f;
-    r2 = vdest + (r3 < 0x20 ? r3 + 0x260 : r3 + 0x640);
-    for (i = 0; i < 0x2b; i++)
+    for (y = 0; y < 18; y++)
     {
-        *r2++ = 0;
-        r3++;
-        r3 &= 0x3f;
-        if (r3 == 0)
-            r2 -= 0x420;
-        if (r3 == 0x20)
-            r2 += 0x3e0;
+        for(x = 0; x < rectWidth; x++)
+        {
+            // Get the tile and palette metadata for each
+            // 2 bytes, and copy over into the buffer.
+            tileMeta = (*tilemap & 0xfff) + tileOffset;
+            paletteMeta =  (*tilemap & 0xf000) + paletteOffset;
+            dest[x] = paletteMeta | tileMeta;
+            tilemap++;
+        }
+        for(x = 0; x < rectWidth2; x++)
+        {
+            // Repeat the same process again in case we need
+            // to copy halves.
+            tileMeta = (*tilemap & 0xfff) + tileOffset;
+            paletteMeta =  (*tilemap & 0xf000) + paletteOffset;
+            dest2[x] = paletteMeta | tileMeta;
+            tilemap++;
+        }
+        dest += 0x20;
+        dest2 += 0x20;
+    }
+
+    if (direction != 0)
+    {
+        fillX = (direction > 0 ? rectX + 20 : rectX - 4) & 0x3F;
+
+        if(fillX < 32)
+            fillDest = buffer + (fillX + 0x40);
+        else
+            fillDest = buffer + (fillX + 0x420);
+
+        for(x = 0; x < 4; x++)
+        {
+            for(y = 0; y < 18; y++)
+            {
+                *fillDest = 0; // Blank the buffer.
+                fillDest += 0x20;
+            }
+            // Needs to be one statement, or else it won't match.
+            // fillX = ++fillX & 0x3F; matches, but to have consistency
+            // with ClearLowestWallpaperTiles, which requires var + 1
+            // instead for a similar operation, we'll use that.
+            fillX = (fillX + 1) & 0x3F;
+
+            if (fillX < 32)
+                fillDest = buffer + (fillX + 0x40);
+            else
+                fillDest = buffer + (fillX + 0x420);
+        }
     }
 }
-#else
-NAKED void sub_809A14C(u16 *vdest)
+
+/*
+    Clears the lowest line of a wallpaper buffer.
+    Depends on stored BG2 X variable in PSS.
+
+    - buffer : Wallpaper buffer.
+*/
+void ClearLowestWallpaperTiles(u16 *buffer)
 {
-    asm_unified("\tpush {r4-r6,lr}\n"
-                    "\tadds r2, r0, 0\n"
-                    "\tldr r0, _0809A174 @ =gPokemonStorageSystemPtr\n"
-                    "\tldr r0, [r0]\n"
-                    "\tldr r1, _0809A178 @ =0x000008b4\n"
-                    "\tadds r0, r1\n"
-                    "\tldrh r0, [r0]\n"
-                    "\tlsrs r0, 3\n"
-                    "\tadds r3, r0, 0\n"
-                    "\tadds r3, 0x1E\n"
-                    "\tmovs r0, 0x3F\n"
-                    "\tands r3, r0\n"
-                    "\tadds r0, r3, 0\n"
-                    "\tcmp r0, 0x1F\n"
-                    "\tbgt _0809A17C\n"
-                    "\tlsls r0, 1\n"
-                    "\tmovs r6, 0x98\n"
-                    "\tlsls r6, 3\n"
-                    "\tadds r0, r6\n"
-                    "\tb _0809A184\n"
-                    "\t.align 2, 0\n"
-                    "_0809A174: .4byte gPokemonStorageSystemPtr\n"
-                    "_0809A178: .4byte 0x000008b4\n"
-                    "_0809A17C:\n"
-                    "\tlsls r0, 1\n"
-                    "\tmovs r1, 0xC8\n"
-                    "\tlsls r1, 4\n"
-                    "\tadds r0, r1\n"
-                    "_0809A184:\n"
-                    "\tadds r2, r0\n"
-                    "\tmovs r0, 0\n"
-                    "\tmovs r5, 0\n"
-                    "\tmovs r4, 0x3F\n"
-                    "_0809A18C:\n"
-                    "\tstrh r5, [r2]\n"
-                    "\tadds r2, 0x2\n"
-                    "\tadds r3, 0x1\n"
-                    "\tands r3, r4\n"
-                    "\tadds r1, r3, 0\n"
-                    "\tcmp r1, 0\n"
-                    "\tbne _0809A19E\n"
-                    "\tldr r6, _0809A1B8 @ =0xfffff7c0\n"
-                    "\tadds r2, r6\n"
-                    "_0809A19E:\n"
-                    "\tcmp r1, 0x20\n"
-                    "\tbne _0809A1A8\n"
-                    "\tmovs r1, 0xF8\n"
-                    "\tlsls r1, 3\n"
-                    "\tadds r2, r1\n"
-                    "_0809A1A8:\n"
-                    "\tadds r0, 0x1\n"
-                    "\tlsls r0, 16\n"
-                    "\tlsrs r0, 16\n"
-                    "\tcmp r0, 0x2B\n"
-                    "\tbls _0809A18C\n"
-                    "\tpop {r4-r6}\n"
-                    "\tpop {r0}\n"
-                    "\tbx r0\n"
-                    "\t.align 2, 0\n"
-                    "_0809A1B8: .4byte 0xfffff7c0");
+    u16 x;
+    s16 rectX = ((gPokemonStorageSystemPtr->unk_08b4 / 8) + 30) & 0x3F;
+
+    if (rectX < 32)
+        buffer += rectX + 0x260;
+    else
+        buffer += rectX + 0x640;
+
+    for (x = 0; x < 44; x++)
+    {
+        *buffer++ = 0;
+        // Needs to be one statement in order to match.
+        rectX = (rectX + 1) & 0x3F;
+        if (rectX == 0)
+            buffer -= 0x420;
+        if (rectX == 32)
+            buffer += 0x3e0;
+    }
 }
-#endif
 
 void sub_809A1BC(const u8 *a0, const u8 *text)
 {
@@ -1159,10 +882,10 @@ struct Sprite *sub_809A9A0(u16 x, u16 y, u8 animId, u8 priority, u8 subpriority)
 void sub_809AA24(void)
 {
     if (gPokemonStorageSystemPtr->unk_0005 != 1)
-        gUnknown_020384E4 = 0;
+        sBoxCursorArea = 0;
     else
-        gUnknown_020384E4 = 1;
-    gUnknown_020384E5 = 0;
+        sBoxCursorArea = 1;
+    sBoxCursorPosition = 0;
     gUnknown_020384E6 = FALSE;
     gUnknown_020384E7 = 0;
     gUnknown_020384E8 = 0;
@@ -1224,12 +947,12 @@ void sub_809AACC(u8 a0, u8 a1, u16 *a2, u16 *a3)
 
 u16 sub_809AB8C(void)
 {
-    switch (gUnknown_020384E4)
+    switch (sBoxCursorArea)
     {
         case 1:
-            return GetMonData(gPlayerParty + gUnknown_020384E5, MON_DATA_SPECIES);
+            return GetMonData(gPlayerParty + sBoxCursorPosition, MON_DATA_SPECIES);
         case 0:
-            return GetBoxMonData(gPokemonStorage.boxes[get_preferred_box()] + gUnknown_020384E5, MON_DATA_SPECIES);
+            return GetBoxMonData(gPokemonStorage.boxes[get_preferred_box()] + sBoxCursorPosition, MON_DATA_SPECIES);
         default:
             return SPECIES_NONE;
     }
@@ -1339,7 +1062,7 @@ void sub_809AF18(u8 a0, u8 a1)
     sub_809AD94();
     if (!gUnknown_020384E6)
         StartSpriteAnim(gPokemonStorageSystemPtr->unk_11c0, 1);
-    if (a0 == 1 && gUnknown_020384E4 != 1)
+    if (a0 == 1 && sBoxCursorArea != 1)
     {
         gPokemonStorageSystemPtr->unk_11e2 = a0;
         gPokemonStorageSystemPtr->unk_11c4->invisible = TRUE;
@@ -1357,12 +1080,12 @@ void sub_809AF18(u8 a0, u8 a1)
 
 void sub_809AFB8(void)
 {
-    gUnknown_020384E4 = gPokemonStorageSystemPtr->unk_11e0;
-    gUnknown_020384E5 = gPokemonStorageSystemPtr->unk_11e1;
+    sBoxCursorArea = gPokemonStorageSystemPtr->unk_11e0;
+    sBoxCursorPosition = gPokemonStorageSystemPtr->unk_11e1;
     if (!gUnknown_020384E6)
         StartSpriteAnim(gPokemonStorageSystemPtr->unk_11c0, 0);
     sub_809BF74();
-    switch (gUnknown_020384E4)
+    switch (sBoxCursorArea)
     {
         case 2:
             sub_809A860(TRUE);
@@ -1406,7 +1129,7 @@ void sub_809B0D4(void)
 
 void sub_809B0E0(void)
 {
-    gUnknown_020384EA = gUnknown_020384E5;
+    gUnknown_020384EA = sBoxCursorPosition;
 }
 
 u8 sub_809B0F4(void)
@@ -1483,7 +1206,7 @@ bool8 sub_809B24C(void)
     switch (gPokemonStorageSystemPtr->unk_12a8)
     {
         case 0:
-            switch (gUnknown_020384E4)
+            switch (sBoxCursorArea)
             {
                 case 1:
                     gPokemonStorageSystemPtr->unk_12a9 = 14;
@@ -1495,14 +1218,14 @@ bool8 sub_809B24C(void)
                     return FALSE;
             }
             StartSpriteAnim(gPokemonStorageSystemPtr->unk_11c0, 2);
-            sub_80996B0(gPokemonStorageSystemPtr->unk_12a9, gUnknown_020384E5);
+            sub_80996B0(gPokemonStorageSystemPtr->unk_12a9, sBoxCursorPosition);
             gPokemonStorageSystemPtr->unk_12a8++;
             break;
         case 1:
             if (!sub_809971C())
             {
                 StartSpriteAnim(gPokemonStorageSystemPtr->unk_11c0, 3);
-                diegohint1(gPokemonStorageSystemPtr->unk_12a9, gUnknown_020384E5);
+                SetShiftedMonData(gPokemonStorageSystemPtr->unk_12a9, sBoxCursorPosition);
                 gPokemonStorageSystemPtr->unk_12a8++;
             }
             break;
@@ -1543,15 +1266,15 @@ bool8 sub_809B358(void)
 
 void sub_809B384(void)
 {
-    switch (gUnknown_020384E4)
+    switch (sBoxCursorArea)
     {
         case 1:
-            sub_809B44C(14, gUnknown_020384E5);
-            sub_8099584(0, gUnknown_020384E5);
+            sub_809B44C(14, sBoxCursorPosition);
+            sub_8099584(0, sBoxCursorPosition);
             break;
         case 0:
-            sub_809B44C(get_preferred_box(), gUnknown_020384E5);
-            sub_8099584(1, gUnknown_020384E5);
+            sub_809B44C(get_preferred_box(), sBoxCursorPosition);
+            sub_8099584(1, sBoxCursorPosition);
             break;
         default:
             return;
@@ -1562,16 +1285,16 @@ void sub_809B384(void)
 void sub_809B3E0(void)
 {
     u8 boxId;
-    switch (gUnknown_020384E4)
+    switch (sBoxCursorArea)
     {
         case 1:
-            diegohint2(14, gUnknown_020384E5);
-            sub_809960C(14, gUnknown_020384E5);
+            SetPlacedMonData(14, sBoxCursorPosition);
+            sub_809960C(14, sBoxCursorPosition);
             break;
         case 0:
             boxId = get_preferred_box();
-            diegohint2(boxId, gUnknown_020384E5);
-            sub_809960C(boxId, gUnknown_020384E5);
+            SetPlacedMonData(boxId, sBoxCursorPosition);
+            sub_809960C(boxId, sBoxCursorPosition);
             break;
         default:
             return;
@@ -1587,7 +1310,7 @@ void sub_809B440(void)
 void sub_809B44C(u8 a0, u8 a1)
 {
     if (a0 == 14)
-        gPokemonStorageSystemPtr->unk_25b4 = gPlayerParty[gUnknown_020384E5];
+        gPokemonStorageSystemPtr->unk_25b4 = gPlayerParty[sBoxCursorPosition];
     else
         ExpandBoxMon(gPokemonStorage.boxes[a0] + a1, &gPokemonStorageSystemPtr->unk_25b4);
     sub_809B548(a0, a1);
@@ -1595,16 +1318,16 @@ void sub_809B44C(u8 a0, u8 a1)
     gUnknown_020384E8 = a1;
 }
 
-void diegohint2(u8 a0, u8 a1)
+void SetPlacedMonData(u8 boxId, u8 position)
 {
-    if (a0 == 14)
+    if (boxId == 14)
     {
-        gPlayerParty[a1] = gPokemonStorageSystemPtr->unk_25b4;
+        gPlayerParty[position] = gPokemonStorageSystemPtr->unk_25b4;
     }
     else
     {
         BoxMonRestorePP(&gPokemonStorageSystemPtr->unk_25b4.box);
-        gPokemonStorage.boxes[a0][a1] = gPokemonStorageSystemPtr->unk_25b4.box;
+        gPokemonStorage.boxes[boxId][position] = gPokemonStorageSystemPtr->unk_25b4.box;
     }
 }
 
@@ -1616,17 +1339,17 @@ void sub_809B548(u8 a0, u8 a1)
         ZeroBoxMonData(gPokemonStorage.boxes[a0] + a1);
 }
 
-void diegohint1(u8 a0, u8 a1)
+void SetShiftedMonData(u8 boxId, u8 position)
 {
-    if (a0 == 14)
-        gPokemonStorageSystemPtr->unk_2618 = gPlayerParty[a1];
+    if (boxId == 14)
+        gPokemonStorageSystemPtr->unk_2618 = gPlayerParty[position];
     else
-        ExpandBoxMon(gPokemonStorage.boxes[a0] + a1, &gPokemonStorageSystemPtr->unk_2618);
-    diegohint2(a0, a1);
+        ExpandBoxMon(gPokemonStorage.boxes[boxId] + position, &gPokemonStorageSystemPtr->unk_2618);
+    SetPlacedMonData(boxId, position);
     gPokemonStorageSystemPtr->unk_25b4 = gPokemonStorageSystemPtr->unk_2618;
     sub_809C04C(&gPokemonStorageSystemPtr->unk_25b4, 0);
-    gUnknown_020384E7 = a0;
-    gUnknown_020384E8 = a1;
+    gUnknown_020384E7 = boxId;
+    gUnknown_020384E8 = position;
 }
 
 bool8 sub_809B62C(u8 boxId)
@@ -1636,15 +1359,15 @@ bool8 sub_809B62C(u8 boxId)
         return FALSE;
     if (gUnknown_020384E6)
     {
-        diegohint2(boxId, monIdx);
+        SetPlacedMonData(boxId, monIdx);
         sub_8099480();
         gUnknown_020384E6 = FALSE;
     }
     else
     {
-        sub_809B44C(14, gUnknown_020384E5);
-        diegohint2(boxId, monIdx);
-        sub_8099520(gUnknown_020384E5);
+        sub_809B44C(14, sBoxCursorPosition);
+        SetPlacedMonData(boxId, monIdx);
+        sub_8099520(sBoxCursorPosition);
     }
     if (boxId == get_preferred_box())
         sub_8098D20(monIdx);
@@ -1664,11 +1387,11 @@ void sub_809B6DC(void)
 
     if (gUnknown_020384E6)
         mode = 2;
-    else if (gUnknown_020384E4 == 1)
+    else if (sBoxCursorArea == 1)
         mode = 0;
     else
         mode = 1;
-    sub_809981C(mode, gUnknown_020384E5);
+    sub_809981C(mode, sBoxCursorPosition);
     StringCopy(gPokemonStorageSystemPtr->unk_26e4, gPokemonStorageSystemPtr->unk_11fa);
 }
 
@@ -1690,11 +1413,11 @@ void sub_809B760(void)
     else
     {
         u8 boxId;
-        if (gUnknown_020384E4 == 1)
+        if (sBoxCursorArea == 1)
             boxId = 14;
         else
             boxId = get_preferred_box();
-        sub_809B548(boxId, gUnknown_020384E5);
+        sub_809B548(boxId, sBoxCursorPosition);
     }
     sub_809BF74();
 }
@@ -1716,17 +1439,17 @@ void sub_809B7D4(void)
     }
     else
     {
-        if (gUnknown_020384E4 == 1)
+        if (sBoxCursorArea == 1)
         {
-            gPokemonStorageSystemPtr->unk_2618 = gPlayerParty[gUnknown_020384E5];
+            gPokemonStorageSystemPtr->unk_2618 = gPlayerParty[sBoxCursorPosition];
             gPokemonStorageSystemPtr->unk_2682 = 14;
         }
         else
         {
-            ExpandBoxMon(gPokemonStorage.boxes[gPokemonStorage.currentBox] + gUnknown_020384E5, &gPokemonStorageSystemPtr->unk_2618);
+            ExpandBoxMon(gPokemonStorage.boxes[gPokemonStorage.currentBox] + sBoxCursorPosition, &gPokemonStorageSystemPtr->unk_2618);
             gPokemonStorageSystemPtr->unk_2682 = gPokemonStorage.currentBox;
         }
-        gPokemonStorageSystemPtr->unk_2683 = gUnknown_020384E5;
+        gPokemonStorageSystemPtr->unk_2683 = sBoxCursorPosition;
     }
     gPokemonStorageSystemPtr->unk_267e = 0;
     gPokemonStorageSystemPtr->unk_267f = 0;
@@ -1838,17 +1561,17 @@ void sub_809BC18(void)
         gPokemonStorageSystemPtr->unk_268c = 0;
         gPokemonStorageSystemPtr->unk_268e = 0;
     }
-    else if (gUnknown_020384E4 == 1)
+    else if (sBoxCursorArea == 1)
     {
         gPokemonStorageSystemPtr->unk_2690.pokemon = gPlayerParty;
-        gPokemonStorageSystemPtr->unk_268d = gUnknown_020384E5;
+        gPokemonStorageSystemPtr->unk_268d = sBoxCursorPosition;
         gPokemonStorageSystemPtr->unk_268c = StorageSystemGetPartySize() - 1;
         gPokemonStorageSystemPtr->unk_268e = 0;
     }
     else
     {
         gPokemonStorageSystemPtr->unk_2690.box = gPokemonStorage.boxes[gPokemonStorage.currentBox];
-        gPokemonStorageSystemPtr->unk_268d = gUnknown_020384E5;
+        gPokemonStorageSystemPtr->unk_268d = sBoxCursorPosition;
         gPokemonStorageSystemPtr->unk_268c = 30 - 1;
         gPokemonStorageSystemPtr->unk_268e = 5;
     }
@@ -1859,7 +1582,7 @@ void sub_809BD14(void)
     if (gUnknown_020384E6)
         sub_809BBC0();
     else
-        gUnknown_020384E5 = pssData.monIndex;
+        sBoxCursorPosition = pssData.monIndex;
 }
 
 s16 party_compaction(void)
@@ -1891,16 +1614,16 @@ void sub_809BDD8(u8 markings)
         SetMonData(&gPokemonStorageSystemPtr->unk_25b4, MON_DATA_MARKINGS, &markings);
     else
     {
-        if (gUnknown_020384E4 == 1)
-            SetMonData(gPlayerParty + gUnknown_020384E5, MON_DATA_MARKINGS, &markings);
-        if (gUnknown_020384E4 == 0)
-            SetBoxMonData(gPokemonStorage.boxes[get_preferred_box()] + gUnknown_020384E5, MON_DATA_MARKINGS, &markings);
+        if (sBoxCursorArea == 1)
+            SetMonData(gPlayerParty + sBoxCursorPosition, MON_DATA_MARKINGS, &markings);
+        if (sBoxCursorArea == 0)
+            SetBoxMonData(gPokemonStorage.boxes[get_preferred_box()] + sBoxCursorPosition, MON_DATA_MARKINGS, &markings);
     }
 }
 
 bool8 sub_809BE80(void)
 {
-    if (gUnknown_020384E4 == 1 && !gUnknown_020384E6 && CountAlivePartyMonsExceptOne(gUnknown_020384E5) == 0)
+    if (sBoxCursorArea == 1 && !gUnknown_020384E6 && CountAlivePartyMonsExceptOne(sBoxCursorPosition) == 0)
         return TRUE;
     return FALSE;
 }
@@ -1909,7 +1632,7 @@ bool8 sub_809BEBC(void)
 {
     if (gUnknown_020384E6)
     {
-        if (gUnknown_020384E4 == 1 && CountAlivePartyMonsExceptOne(gUnknown_020384E5) == 0)
+        if (sBoxCursorArea == 1 && CountAlivePartyMonsExceptOne(sBoxCursorPosition) == 0)
         {
             if (gPokemonStorageSystemPtr->unk_11f9 || GetMonData(&gPokemonStorageSystemPtr->unk_25b4, MON_DATA_HP) == 0)
                 return FALSE;
@@ -1926,12 +1649,12 @@ bool8 sub_809BF20(void)
 
 bool8 sub_809BF2C(void)
 {
-    return gUnknown_020384E4 == 2 ? TRUE : FALSE;
+    return sBoxCursorArea == 2 ? TRUE : FALSE;
 }
 
 bool8 sub_809BF48(void)
 {
-    return (gUnknown_020384E4 == 3 && gUnknown_020384E5 == 1) ? TRUE : FALSE;
+    return (sBoxCursorArea == 3 && sBoxCursorPosition == 1) ? TRUE : FALSE;
 }
 
 void sub_809BF74(void)
@@ -1939,12 +1662,12 @@ void sub_809BF74(void)
     gPokemonStorageSystemPtr->unk_11f6 = gUnknown_020384E6 ? 0 : 1;
     if (!gUnknown_020384E6)
     {
-        switch (gUnknown_020384E4)
+        switch (sBoxCursorArea)
         {
             case 1:
-                if (gUnknown_020384E5 < PARTY_SIZE)
+                if (sBoxCursorPosition < PARTY_SIZE)
                 {
-                    sub_809C04C(gPlayerParty + gUnknown_020384E5, 0);
+                    sub_809C04C(gPlayerParty + sBoxCursorPosition, 0);
                     break;
                 }
                 // fallthrough
@@ -1953,7 +1676,7 @@ void sub_809BF74(void)
                 sub_809C04C(NULL, 2);
                 break;
             case 0:
-                sub_809C04C(gPokemonStorage.boxes[get_preferred_box()] + gUnknown_020384E5, 1);
+                sub_809C04C(gPokemonStorage.boxes[get_preferred_box()] + sBoxCursorPosition, 1);
                 break;
         }
     }
@@ -2122,77 +1845,191 @@ void sub_809C04C(void *pokemon, u8 a1)
     }
 }
 
-#ifdef NONMATCHING
 u8 sub_809C464(void)
 {
     u8 r9;
-    s8 r8 = gUnknown_020384E4;
-    s8 r4 = gUnknown_020384E5;
-    gPokemonStorageSystemPtr->unk_11de = 0;
-    gPokemonStorageSystemPtr->unk_11df = 0;
-    gPokemonStorageSystemPtr->unk_11e3 = 0;
-    if (gMain.newAndRepeatedKeys & DPAD_UP)
+    s8 r8 = sBoxCursorArea;
+    s8 r4 = sBoxCursorPosition;
+
+    do
     {
-        r9 = 1;
-        if (gUnknown_020384E5 >= 6)
+        gPokemonStorageSystemPtr->unk_11de = 0;
+        gPokemonStorageSystemPtr->unk_11df = 0;
+        gPokemonStorageSystemPtr->unk_11e3 = 0;
+
+        if (JOY_REPT(DPAD_UP))
         {
-            r4 -= 6;
+            r9 = 1;
+            if (sBoxCursorPosition >= 6)
+            {
+                r4 -= 6;
+            }
+            else
+            {
+                r8 = 2;
+                r4 = 0;
+            }
+            break;
         }
-        else
+        if (JOY_REPT(DPAD_DOWN))
         {
+            r9 = 1;
+            r4 += 6;
+            if (r4 >= 30)
+            {
+                r8 = 3;
+                r4 -= 30;
+                r4 /= 3;
+                gPokemonStorageSystemPtr->unk_11de = 1;
+                gPokemonStorageSystemPtr->unk_11e3 = 1;
+            }
+            break;
+        }
+        if (JOY_REPT(DPAD_LEFT))
+        {
+            r9 = 1;
+            if (sBoxCursorPosition % 6)
+                r4--;
+            else
+            {
+                gPokemonStorageSystemPtr->unk_11df = -1;
+                r4 += 5;
+            }
+            break;
+        }
+        if (JOY_REPT(DPAD_RIGHT))
+        {
+            r9 = 1;
+            if ((sBoxCursorPosition + 1) % 6)
+                r4++;
+            else
+            {
+                gPokemonStorageSystemPtr->unk_11df = 1;
+                r4 -= 5;
+            }
+            break;
+        }
+        if (JOY_NEW(START_BUTTON))
+        {
+            r9 = 1;
             r8 = 2;
             r4 = 0;
+            break;
         }
-    }
-    else if (gMain.newAndRepeatedKeys & DPAD_DOWN)
-    {
-        r9 = 1;
-        r4 += 6;
-        if (r4 >= 30)
-        {
-            r8 = 3;
-            r4 -= 30;
-            r4 /= 3;
-            gPokemonStorageSystemPtr->unk_11de = 1;
-            gPokemonStorageSystemPtr->unk_11e3 = 1;
-        }
-    }
-    else if (gMain.newAndRepeatedKeys & DPAD_LEFT)
-    {
-        r9 = 1;
-        if (gUnknown_020384E5 % 6)
-            r4--;
-        else
-        {
-            gPokemonStorageSystemPtr->unk_11df = -1;
-            r4 += 5;
-        }
-    }
-    else if (gMain.newAndRepeatedKeys & DPAD_RIGHT)
-    {
-        r9 = 1;
-        if ((gUnknown_020384E5 + 1) % 6)
-            r4++;
-        else
-        {
-            gPokemonStorageSystemPtr->unk_11df = 1;
-            r4 -= 5;
-        }
-    }
-    else if (gMain.newKeys & START_BUTTON)
-    {
-        r9 = 1;
-        r8 = 2;
-        r4 = 0;
-    }
-    else
-    {
-        if ((gMain.newKeys & A_BUTTON) && sub_809CAB0())
+        if ((JOY_NEW(A_BUTTON)) && sub_809CAB0())
         {
             if (gUnknown_020384E9 == 0)
                 return 8;
             switch (sub_809CE4C(0))
             {
+            case 1:
+                return 11;
+            case 2:
+                return 12;
+            case 3:
+                return 13;
+            case 4:
+                return 14;
+            case 5:
+                return 15;
+            }
+        }
+        if (JOY_NEW(B_BUTTON))
+            return 16;
+        if (gSaveBlock2.optionsButtonMode == OPTIONS_BUTTON_MODE_LR)
+        {
+            if (JOY_HELD(L_BUTTON))
+                return 10;
+            if (JOY_HELD(R_BUTTON))
+                return 9;
+        }
+        if (JOY_NEW(SELECT_BUTTON))
+        {
+            sub_809CD88();
+            return 0;
+        }
+        r9 = 0;
+    } while (0);
+    if (r9)
+        sub_809AF18(r8, r4);
+    return r9;
+}
+
+u8 sub_809C664(void)
+{
+    u8 retVal;
+    bool8 gotoBox;
+    s8 cursorArea;
+    s8 cursorPosition;
+
+    do
+    {
+        cursorArea = sBoxCursorArea;
+        cursorPosition = sBoxCursorPosition;
+        gPokemonStorageSystemPtr->unk_11df = 0;
+        gPokemonStorageSystemPtr->unk_11de = 0;
+        gPokemonStorageSystemPtr->unk_11e3 = 0;
+        gotoBox = FALSE;
+        retVal = 0;
+
+        if (JOY_REPT(DPAD_UP))
+        {
+            if (--cursorPosition < 0)
+                cursorPosition = 6;
+            if (cursorPosition != sBoxCursorPosition)
+                retVal = 1;
+            break;
+        }
+
+        if (JOY_REPT(DPAD_DOWN))
+        {
+            if (++cursorPosition > 6)
+                cursorPosition = 0;
+            if (cursorPosition != sBoxCursorPosition)
+                retVal = 1;
+            break;
+        }
+
+        if (JOY_REPT(DPAD_LEFT) && sBoxCursorPosition != 0)
+        {
+            retVal = 1;
+            gPokemonStorageSystemPtr->unk_11e2 = sBoxCursorPosition;
+            cursorPosition = 0;
+            break;
+        }
+
+        if (JOY_REPT(DPAD_RIGHT))
+        {
+            if (sBoxCursorPosition == 0)
+            {
+                retVal = 1;
+                cursorPosition = gPokemonStorageSystemPtr->unk_11e2;
+            }
+            else
+            {
+                retVal = 6;
+                cursorArea = 0;
+                cursorPosition = 0;
+            }
+            break;
+        }
+
+        if (JOY_NEW(A_BUTTON))
+        {
+            if (sBoxCursorPosition == 6)
+            {
+                if (gPokemonStorageSystemPtr->unk_0005 == 1)
+                    return 4;
+
+                gotoBox = TRUE;
+            }
+            else if (sub_809CAB0())
+            {
+                if (!gUnknown_020384E9)
+                    return 8;
+
+                switch (sub_809CE4C(0))
+                {
                 case 1:
                     return 11;
                 case 2:
@@ -2203,10 +2040,74 @@ u8 sub_809C464(void)
                     return 14;
                 case 5:
                     return 15;
+                }
             }
         }
-        if (gMain.newKeys & B_BUTTON)
-            return 16;
+
+        if (JOY_NEW(B_BUTTON))
+        {
+            if (gPokemonStorageSystemPtr->unk_0005 == 1)
+                return 16;
+
+            gotoBox = TRUE;
+        }
+
+        if (gotoBox)
+        {
+            retVal = 6;
+            cursorArea = 0;
+            cursorPosition = 0;
+            break;
+        }
+
+        if (JOY_NEW(SELECT_BUTTON))
+        {
+            sub_809CD88();
+            return 0;
+        }
+    } while (0);
+
+    if (retVal != 0)
+    {
+        sub_809AF18(cursorArea, cursorPosition);
+    }
+
+    return retVal;
+}
+
+u8 sub_809C85C(void)
+{
+    u8 retVal;
+    s8 cursorArea;
+    s8 cursorPosition;
+
+    do
+    {
+        gPokemonStorageSystemPtr->unk_11df = 0;
+        gPokemonStorageSystemPtr->unk_11de = 0;
+        gPokemonStorageSystemPtr->unk_11e3 = 0;
+
+        if (JOY_REPT(DPAD_UP))
+        {
+            retVal = 1;
+            cursorArea = 3;
+            cursorPosition = 0;
+            gPokemonStorageSystemPtr->unk_11e3 = 1;
+            break;
+        }
+        else if (JOY_REPT(DPAD_DOWN))
+        {
+            retVal = 1;
+            cursorArea = 0;
+            cursorPosition = 2;
+            break;
+        }
+
+        if (gMain.heldKeys & DPAD_LEFT)
+            return 10;
+        if (gMain.heldKeys & DPAD_RIGHT)
+            return 9;
+
         if (gSaveBlock2.optionsButtonMode == OPTIONS_BUTTON_MODE_LR)
         {
             if (gMain.heldKeys & L_BUTTON)
@@ -2214,940 +2115,122 @@ u8 sub_809C464(void)
             if (gMain.heldKeys & R_BUTTON)
                 return 9;
         }
-        if (gMain.newKeys & SELECT_BUTTON)
+
+        if (JOY_NEW(A_BUTTON))
+        {
+            sub_809A860(FALSE);
+            sub_809CA8C();
+            return 7;
+        }
+
+        if (JOY_NEW(B_BUTTON))
+            return 16;
+
+        if (JOY_NEW(SELECT_BUTTON))
         {
             sub_809CD88();
             return 0;
         }
-        r9 = 0;
-    }
-    if (r9)
-        sub_809AF18(r8, r4);
-    return r9;
-}
-#else
-NAKED u8 sub_809C464(void)
-{
-    asm_unified("\tpush {r4-r7,lr}\n"
-                    "\tmov r7, r9\n"
-                    "\tmov r6, r8\n"
-                    "\tpush {r6,r7}\n"
-                    "\tldr r0, _0809C4D8 @ =gUnknown_020384E4\n"
-                    "\tldrb r0, [r0]\n"
-                    "\tmov r8, r0\n"
-                    "\tldr r2, _0809C4DC @ =gUnknown_020384E5\n"
-                    "\tldrb r4, [r2]\n"
-                    "\tldr r0, _0809C4E0 @ =gPokemonStorageSystemPtr\n"
-                    "\tldr r1, [r0]\n"
-                    "\tldr r0, _0809C4E4 @ =0x000011de\n"
-                    "\tadds r7, r1, r0\n"
-                    "\tmovs r0, 0\n"
-                    "\tstrb r0, [r7]\n"
-                    "\tldr r3, _0809C4E8 @ =0x000011df\n"
-                    "\tadds r5, r1, r3\n"
-                    "\tstrb r0, [r5]\n"
-                    "\tadds r3, 0x4\n"
-                    "\tadds r6, r1, r3\n"
-                    "\tstrb r0, [r6]\n"
-                    "\tldr r0, _0809C4EC @ =gMain\n"
-                    "\tmov r12, r0\n"
-                    "\tldrh r1, [r0, 0x30]\n"
-                    "\tmovs r0, 0x40\n"
-                    "\tands r0, r1\n"
-                    "\tadds r3, r2, 0\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C4A0\n"
-                    "\tb _0809C62A\n"
-                    "_0809C4A0:\n"
-                    "\tmovs r0, 0x80\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C4F0\n"
-                    "\tmovs r1, 0x1\n"
-                    "\tmov r9, r1\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r3, 0xC0\n"
-                    "\tlsls r3, 19\n"
-                    "\tadds r0, r3\n"
-                    "\tlsrs r4, r0, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tcmp r0, 0x1D\n"
-                    "\tbgt _0809C4BE\n"
-                    "\tb _0809C648\n"
-                    "_0809C4BE:\n"
-                    "\tmovs r1, 0x3\n"
-                    "\tmov r8, r1\n"
-                    "\tsubs r0, 0x1E\n"
-                    "\tlsls r0, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tbl __divsi3\n"
-                    "\tlsls r0, 24\n"
-                    "\tlsrs r4, r0, 24\n"
-                    "\tmov r3, r9\n"
-                    "\tstrb r3, [r7]\n"
-                    "\tstrb r3, [r6]\n"
-                    "\tb _0809C648\n"
-                    "\t.align 2, 0\n"
-                    "_0809C4D8: .4byte gUnknown_020384E4\n"
-                    "_0809C4DC: .4byte gUnknown_020384E5\n"
-                    "_0809C4E0: .4byte gPokemonStorageSystemPtr\n"
-                    "_0809C4E4: .4byte 0x000011de\n"
-                    "_0809C4E8: .4byte 0x000011df\n"
-                    "_0809C4EC: .4byte gMain\n"
-                    "_0809C4F0:\n"
-                    "\tmovs r0, 0x20\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C524\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tmov r9, r0\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r3, r0]\n"
-                    "\tmovs r1, 0x6\n"
-                    "\tbl __modsi3\n"
-                    "\tlsls r0, 24\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C514\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r1, 0xFF\n"
-                    "\tlsls r1, 24\n"
-                    "\tb _0809C63C\n"
-                    "_0809C514:\n"
-                    "\tmovs r0, 0xFF\n"
-                    "\tstrb r0, [r5]\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r3, 0xA0\n"
-                    "\tlsls r3, 19\n"
-                    "\tadds r0, r3\n"
-                    "\tlsrs r4, r0, 24\n"
-                    "\tb _0809C648\n"
-                    "_0809C524:\n"
-                    "\tmovs r0, 0x10\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C554\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tmov r9, r0\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r3, r0]\n"
-                    "\tadds r0, 0x1\n"
-                    "\tmovs r1, 0x6\n"
-                    "\tbl __modsi3\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C548\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r1, 0x80\n"
-                    "\tlsls r1, 17\n"
-                    "\tb _0809C63C\n"
-                    "_0809C548:\n"
-                    "\tmov r3, r9\n"
-                    "\tstrb r3, [r5]\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r1, 0xFB\n"
-                    "\tlsls r1, 24\n"
-                    "\tb _0809C63C\n"
-                    "_0809C554:\n"
-                    "\tmov r3, r12\n"
-                    "\tldrh r1, [r3, 0x2E]\n"
-                    "\tmovs r0, 0x8\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C56A\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tmov r9, r0\n"
-                    "\tmovs r1, 0x2\n"
-                    "\tmov r8, r1\n"
-                    "\tb _0809C646\n"
-                    "_0809C56A:\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C5D4\n"
-                    "\tbl sub_809CAB0\n"
-                    "\tlsls r0, 24\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C5D4\n"
-                    "\tldr r0, _0809C588 @ =gUnknown_020384E9\n"
-                    "\tldrb r0, [r0]\n"
-                    "\tcmp r0, 0\n"
-                    "\tbne _0809C58C\n"
-                    "\tmovs r0, 0x8\n"
-                    "\tb _0809C658\n"
-                    "\t.align 2, 0\n"
-                    "_0809C588: .4byte gUnknown_020384E9\n"
-                    "_0809C58C:\n"
-                    "\tmovs r0, 0\n"
-                    "\tbl sub_809CE4C\n"
-                    "\tsubs r0, 0x1\n"
-                    "\tlsls r0, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tcmp r0, 0x4\n"
-                    "\tbhi _0809C5D4\n"
-                    "\tlsls r0, 2\n"
-                    "\tldr r1, _0809C5A8 @ =_0809C5AC\n"
-                    "\tadds r0, r1\n"
-                    "\tldr r0, [r0]\n"
-                    "\tmov pc, r0\n"
-                    "\t.align 2, 0\n"
-                    "_0809C5A8: .4byte _0809C5AC\n"
-                    "\t.align 2, 0\n"
-                    "_0809C5AC:\n"
-                    "\t.4byte _0809C5C0\n"
-                    "\t.4byte _0809C5C4\n"
-                    "\t.4byte _0809C5C8\n"
-                    "\t.4byte _0809C5CC\n"
-                    "\t.4byte _0809C5D0\n"
-                    "_0809C5C0:\n"
-                    "\tmovs r0, 0xB\n"
-                    "\tb _0809C658\n"
-                    "_0809C5C4:\n"
-                    "\tmovs r0, 0xC\n"
-                    "\tb _0809C658\n"
-                    "_0809C5C8:\n"
-                    "\tmovs r0, 0xD\n"
-                    "\tb _0809C658\n"
-                    "_0809C5CC:\n"
-                    "\tmovs r0, 0xE\n"
-                    "\tb _0809C658\n"
-                    "_0809C5D0:\n"
-                    "\tmovs r0, 0xF\n"
-                    "\tb _0809C658\n"
-                    "_0809C5D4:\n"
-                    "\tldr r2, _0809C5E4 @ =gMain\n"
-                    "\tldrh r1, [r2, 0x2E]\n"
-                    "\tmovs r0, 0x2\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C5E8\n"
-                    "\tmovs r0, 0x10\n"
-                    "\tb _0809C658\n"
-                    "\t.align 2, 0\n"
-                    "_0809C5E4: .4byte gMain\n"
-                    "_0809C5E8:\n"
-                    "\tldr r0, _0809C600 @ =gSaveBlock2\n"
-                    "\tldrb r0, [r0, 0x13]\n"
-                    "\tcmp r0, 0x1\n"
-                    "\tbne _0809C612\n"
-                    "\tldrh r1, [r2, 0x2C]\n"
-                    "\tmovs r0, 0x80\n"
-                    "\tlsls r0, 2\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C604\n"
-                    "\tmovs r0, 0xA\n"
-                    "\tb _0809C658\n"
-                    "\t.align 2, 0\n"
-                    "_0809C600: .4byte gSaveBlock2\n"
-                    "_0809C604:\n"
-                    "\tmovs r0, 0x80\n"
-                    "\tlsls r0, 1\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C612\n"
-                    "\tmovs r0, 0x9\n"
-                    "\tb _0809C658\n"
-                    "_0809C612:\n"
-                    "\tldrh r1, [r2, 0x2E]\n"
-                    "\tmovs r0, 0x4\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C624\n"
-                    "\tbl sub_809CD88\n"
-                    "\tmovs r0, 0\n"
-                    "\tb _0809C658\n"
-                    "_0809C624:\n"
-                    "\tmovs r3, 0\n"
-                    "\tmov r9, r3\n"
-                    "\tb _0809C656\n"
-                    "_0809C62A:\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tmov r9, r0\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r2, r0]\n"
-                    "\tcmp r0, 0x5\n"
-                    "\tble _0809C642\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r1, 0xFA\n"
-                    "\tlsls r1, 24\n"
-                    "_0809C63C:\n"
-                    "\tadds r0, r1\n"
-                    "\tlsrs r4, r0, 24\n"
-                    "\tb _0809C648\n"
-                    "_0809C642:\n"
-                    "\tmovs r3, 0x2\n"
-                    "\tmov r8, r3\n"
-                    "_0809C646:\n"
-                    "\tmovs r4, 0\n"
-                    "_0809C648:\n"
-                    "\tmov r0, r9\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C656\n"
-                    "\tmov r0, r8\n"
-                    "\tadds r1, r4, 0\n"
-                    "\tbl sub_809AF18\n"
-                    "_0809C656:\n"
-                    "\tmov r0, r9\n"
-                    "_0809C658:\n"
-                    "\tpop {r3,r4}\n"
-                    "\tmov r8, r3\n"
-                    "\tmov r9, r4\n"
-                    "\tpop {r4-r7}\n"
-                    "\tpop {r1}\n"
-                    "\tbx r1");
-}
-#endif
 
-#ifdef NONMATCHING
-u8 sub_809C664(void)
-{
-    s8 r10 = gUnknown_020384E4;
-    s8 r4 = gUnknown_020384E5;
-    u8 r8;
-    u8 r9;
+        retVal = 0;
+    } while (0);
 
-    gPokemonStorageSystemPtr->unk_11df = 0;
-    gPokemonStorageSystemPtr->unk_11de = 0;
-    gPokemonStorageSystemPtr->unk_11e3 = 0;
-    r9 = FALSE;
-    r8 = 0;
-    if (gMain.newAndRepeatedKeys & DPAD_UP)
+    if (retVal != 0)
     {
-        if (--r4 < 0)
-            r4 = 6;
-        if (r4 != gUnknown_020384E5)
-            r8 = 1;
-    }
-    else if (gMain.newAndRepeatedKeys & DPAD_DOWN)
-    {
-        if (++r4 > 6)
-            r4 = 0;
-        if (r4 != gUnknown_020384E5)
-            r8 = 1;
-    }
-    else if ((gMain.newAndRepeatedKeys & DPAD_LEFT) && gUnknown_020384E5)
-    {
-        r8 = 1;
-        gPokemonStorageSystemPtr->unk_11e2 = gUnknown_020384E5;
-        r4 = 0;
-    }
-    else if (gMain.newAndRepeatedKeys & DPAD_RIGHT)
-    {
-        if (gUnknown_020384E5 == 0)
-        {
-            r8 = 1;
-            r4 = gPokemonStorageSystemPtr->unk_11e2;
-        }
-        else
-        {
-            r8 = 6;
-            r10 = 0;
-            r4 = 0;
-        }
-    }
-    else
-    {
-        if (gMain.newKeys & A_BUTTON)
-        {
-            if (gUnknown_020384E5 == 6)
-            {
-                if (gPokemonStorageSystemPtr->unk_0005 == 1)
-                    return 4;
-                r9 = TRUE;
-            }
-            else if (sub_809CAB0())
-            {
-                if (gUnknown_020384E9 == 0)
-                    return 8;
-                switch (sub_809CE4C(0))
-                {
-                    case 1:
-                        return 11;
-                    case 2:
-                        return 12;
-                    case 3:
-                        return 13;
-                    case 4:
-                        return 14;
-                    case 5:
-                        return 15;
-                }
-            }
-        }
-        if (gMain.newKeys & B_BUTTON)
-        {
-            if (gPokemonStorageSystemPtr->unk_0005 == 1)
-                return 16;
-            r9 = TRUE;
-        }
-        if (!r9)
-        {
-            r8 = 6;
-            r10 = 0;
-            r4 = 0;
-        }
-        else if (gMain.newKeys & SELECT_BUTTON)
-        {
-            sub_809CD88();
-            return 0;
-        }
-    }
-    if (r8)
-        sub_809AF18(r10, r4);
-    return r8;
-}
-#else
-NAKED u8 sub_809C664(void)
-{
-    asm_unified("\tpush {r4-r7,lr}\n"
-                    "\tmov r7, r10\n"
-                    "\tmov r6, r9\n"
-                    "\tmov r5, r8\n"
-                    "\tpush {r5-r7}\n"
-                    "\tldr r0, _0809C6D8 @ =gUnknown_020384E4\n"
-                    "\tldrb r0, [r0]\n"
-                    "\tmov r10, r0\n"
-                    "\tldr r7, _0809C6DC @ =gUnknown_020384E5\n"
-                    "\tldrb r4, [r7]\n"
-                    "\tldr r2, _0809C6E0 @ =gPokemonStorageSystemPtr\n"
-                    "\tldr r5, [r2]\n"
-                    "\tldr r1, _0809C6E4 @ =0x000011df\n"
-                    "\tadds r0, r5, r1\n"
-                    "\tmovs r1, 0\n"
-                    "\tstrb r1, [r0]\n"
-                    "\tldr r3, _0809C6E8 @ =0x000011de\n"
-                    "\tadds r0, r5, r3\n"
-                    "\tstrb r1, [r0]\n"
-                    "\tadds r3, 0x5\n"
-                    "\tadds r0, r5, r3\n"
-                    "\tstrb r1, [r0]\n"
-                    "\tmov r9, r1\n"
-                    "\tmov r8, r1\n"
-                    "\tldr r1, _0809C6EC @ =gMain\n"
-                    "\tldrh r3, [r1, 0x30]\n"
-                    "\tmovs r0, 0x40\n"
-                    "\tands r0, r3\n"
-                    "\tadds r6, r7, 0\n"
-                    "\tmov r12, r2\n"
-                    "\tadds r2, r1, 0\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C6A8\n"
-                    "\tb _0809C81C\n"
-                    "_0809C6A8:\n"
-                    "\tmovs r0, 0x80\n"
-                    "\tands r0, r3\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C6F0\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r1, 0x80\n"
-                    "\tlsls r1, 17\n"
-                    "\tadds r0, r1\n"
-                    "\tlsrs r4, r0, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tcmp r0, 0x6\n"
-                    "\tble _0809C6C2\n"
-                    "\tmovs r4, 0\n"
-                    "_0809C6C2:\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tmovs r1, 0\n"
-                    "\tldrsb r1, [r6, r1]\n"
-                    "\tcmp r0, r1\n"
-                    "\tbne _0809C6D0\n"
-                    "\tb _0809C83C\n"
-                    "_0809C6D0:\n"
-                    "\tmovs r2, 0x1\n"
-                    "\tmov r8, r2\n"
-                    "\tb _0809C842\n"
-                    "\t.align 2, 0\n"
-                    "_0809C6D8: .4byte gUnknown_020384E4\n"
-                    "_0809C6DC: .4byte gUnknown_020384E5\n"
-                    "_0809C6E0: .4byte gPokemonStorageSystemPtr\n"
-                    "_0809C6E4: .4byte 0x000011df\n"
-                    "_0809C6E8: .4byte 0x000011de\n"
-                    "_0809C6EC: .4byte gMain\n"
-                    "_0809C6F0:\n"
-                    "\tmovs r0, 0x20\n"
-                    "\tands r0, r3\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C714\n"
-                    "\tldrb r1, [r6]\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r6, r0]\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C714\n"
-                    "\tmovs r3, 0x1\n"
-                    "\tmov r8, r3\n"
-                    "\tldr r2, _0809C710 @ =0x000011e2\n"
-                    "\tadds r0, r5, r2\n"
-                    "\tstrb r1, [r0]\n"
-                    "\tmovs r4, 0\n"
-                    "\tb _0809C83C\n"
-                    "\t.align 2, 0\n"
-                    "_0809C710: .4byte 0x000011e2\n"
-                    "_0809C714:\n"
-                    "\tldrh r1, [r2, 0x30]\n"
-                    "\tmovs r0, 0x10\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C748\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r6, r0]\n"
-                    "\tcmp r0, 0\n"
-                    "\tbne _0809C73C\n"
-                    "\tmovs r3, 0x1\n"
-                    "\tmov r8, r3\n"
-                    "\tmov r1, r12\n"
-                    "\tldr r0, [r1]\n"
-                    "\tldr r2, _0809C738 @ =0x000011e2\n"
-                    "\tadds r0, r2\n"
-                    "\tldrb r4, [r0]\n"
-                    "\tb _0809C83C\n"
-                    "\t.align 2, 0\n"
-                    "_0809C738: .4byte 0x000011e2\n"
-                    "_0809C73C:\n"
-                    "\tmovs r3, 0x6\n"
-                    "\tmov r8, r3\n"
-                    "\tmovs r0, 0\n"
-                    "\tmov r10, r0\n"
-                    "\tmovs r4, 0\n"
-                    "\tb _0809C83C\n"
-                    "_0809C748:\n"
-                    "\tldrh r1, [r2, 0x2E]\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C7D0\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r6, r0]\n"
-                    "\tcmp r0, 0x6\n"
-                    "\tbne _0809C76E\n"
-                    "\tmov r1, r12\n"
-                    "\tldr r0, [r1]\n"
-                    "\tldrb r0, [r0, 0x5]\n"
-                    "\tcmp r0, 0x1\n"
-                    "\tbne _0809C768\n"
-                    "\tmovs r0, 0x4\n"
-                    "\tb _0809C84C\n"
-                    "_0809C768:\n"
-                    "\tmovs r2, 0x1\n"
-                    "\tmov r9, r2\n"
-                    "\tb _0809C7D0\n"
-                    "_0809C76E:\n"
-                    "\tbl sub_809CAB0\n"
-                    "\tlsls r0, 24\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C7D0\n"
-                    "\tldr r0, _0809C784 @ =gUnknown_020384E9\n"
-                    "\tldrb r0, [r0]\n"
-                    "\tcmp r0, 0\n"
-                    "\tbne _0809C788\n"
-                    "\tmovs r0, 0x8\n"
-                    "\tb _0809C84C\n"
-                    "\t.align 2, 0\n"
-                    "_0809C784: .4byte gUnknown_020384E9\n"
-                    "_0809C788:\n"
-                    "\tmovs r0, 0\n"
-                    "\tbl sub_809CE4C\n"
-                    "\tsubs r0, 0x1\n"
-                    "\tlsls r0, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tcmp r0, 0x4\n"
-                    "\tbhi _0809C7D0\n"
-                    "\tlsls r0, 2\n"
-                    "\tldr r1, _0809C7A4 @ =_0809C7A8\n"
-                    "\tadds r0, r1\n"
-                    "\tldr r0, [r0]\n"
-                    "\tmov pc, r0\n"
-                    "\t.align 2, 0\n"
-                    "_0809C7A4: .4byte _0809C7A8\n"
-                    "\t.align 2, 0\n"
-                    "_0809C7A8:\n"
-                    "\t.4byte _0809C7BC\n"
-                    "\t.4byte _0809C7C0\n"
-                    "\t.4byte _0809C7C4\n"
-                    "\t.4byte _0809C7C8\n"
-                    "\t.4byte _0809C7CC\n"
-                    "_0809C7BC:\n"
-                    "\tmovs r0, 0xB\n"
-                    "\tb _0809C84C\n"
-                    "_0809C7C0:\n"
-                    "\tmovs r0, 0xC\n"
-                    "\tb _0809C84C\n"
-                    "_0809C7C4:\n"
-                    "\tmovs r0, 0xD\n"
-                    "\tb _0809C84C\n"
-                    "_0809C7C8:\n"
-                    "\tmovs r0, 0xE\n"
-                    "\tb _0809C84C\n"
-                    "_0809C7CC:\n"
-                    "\tmovs r0, 0xF\n"
-                    "\tb _0809C84C\n"
-                    "_0809C7D0:\n"
-                    "\tldr r2, _0809C7EC @ =gMain\n"
-                    "\tldrh r1, [r2, 0x2E]\n"
-                    "\tmovs r0, 0x2\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C7F8\n"
-                    "\tldr r0, _0809C7F0 @ =gPokemonStorageSystemPtr\n"
-                    "\tldr r0, [r0]\n"
-                    "\tldrb r0, [r0, 0x5]\n"
-                    "\tcmp r0, 0x1\n"
-                    "\tbne _0809C7F4\n"
-                    "\tmovs r0, 0x10\n"
-                    "\tb _0809C84C\n"
-                    "\t.align 2, 0\n"
-                    "_0809C7EC: .4byte gMain\n"
-                    "_0809C7F0: .4byte gPokemonStorageSystemPtr\n"
-                    "_0809C7F4:\n"
-                    "\tmovs r3, 0x1\n"
-                    "\tmov r9, r3\n"
-                    "_0809C7F8:\n"
-                    "\tmov r0, r9\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C80A\n"
-                    "\tmovs r1, 0x6\n"
-                    "\tmov r8, r1\n"
-                    "\tmovs r2, 0\n"
-                    "\tmov r10, r2\n"
-                    "\tmovs r4, 0\n"
-                    "\tb _0809C83C\n"
-                    "_0809C80A:\n"
-                    "\tldrh r1, [r2, 0x2E]\n"
-                    "\tmovs r0, 0x4\n"
-                    "\tands r0, r1\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0809C83C\n"
-                    "\tbl sub_809CD88\n"
-                    "\tmovs r0, 0\n"
-                    "\tb _0809C84C\n"
-                    "_0809C81C:\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tmovs r3, 0xFF\n"
-                    "\tlsls r3, 24\n"
-                    "\tadds r0, r3\n"
-                    "\tlsrs r4, r0, 24\n"
-                    "\tcmp r0, 0\n"
-                    "\tbge _0809C82C\n"
-                    "\tmovs r4, 0x6\n"
-                    "_0809C82C:\n"
-                    "\tlsls r0, r4, 24\n"
-                    "\tasrs r0, 24\n"
-                    "\tmovs r1, 0\n"
-                    "\tldrsb r1, [r7, r1]\n"
-                    "\tcmp r0, r1\n"
-                    "\tbeq _0809C83C\n"
-                    "\tmovs r0, 0x1\n"
-                    "\tmov r8, r0\n"
-                    "_0809C83C:\n"
-                    "\tmov r1, r8\n"
-                    "\tcmp r1, 0\n"
-                    "\tbeq _0809C84A\n"
-                    "_0809C842:\n"
-                    "\tmov r0, r10\n"
-                    "\tadds r1, r4, 0\n"
-                    "\tbl sub_809AF18\n"
-                    "_0809C84A:\n"
-                    "\tmov r0, r8\n"
-                    "_0809C84C:\n"
-                    "\tpop {r3-r5}\n"
-                    "\tmov r8, r3\n"
-                    "\tmov r9, r4\n"
-                    "\tmov r10, r5\n"
-                    "\tpop {r4-r7}\n"
-                    "\tpop {r1}\n"
-                    "\tbx r1");
-}
-#endif
-
-u8 sub_809C85C(void)
-{
-    u8 retVal;
-    s8 var0;
-    register s8 var1 asm("r5"); // FAKEMATCHING: r5 and r6 become swapped without this register hack
-
-    gPokemonStorageSystemPtr->unk_11df = 0;
-    gPokemonStorageSystemPtr->unk_11de = 0;
-    gPokemonStorageSystemPtr->unk_11e3 = 0;
-
-    if (!(gMain.newAndRepeatedKeys & DPAD_UP))
-    {
-        if (gMain.newAndRepeatedKeys & DPAD_DOWN)
-        {
-            retVal = 1;
-            var0 = 0;
-            var1 = 2;
-        }
-        else
-        {
-            if (gMain.heldKeys & DPAD_LEFT)
-                return 10;
-            if (gMain.heldKeys & DPAD_RIGHT)
-                return 9;
-            if (gSaveBlock2.optionsButtonMode == OPTIONS_BUTTON_MODE_LR)
-            {
-                if (gMain.heldKeys & L_BUTTON)
-                    return 10;
-                if (gMain.heldKeys & R_BUTTON)
-                    return 9;
-            }
-
-            if (gMain.newKeys & A_BUTTON)
-            {
-                sub_809A860(0);
-                sub_809CA8C();
-                return 7;
-            }
-
-            if (gMain.newKeys & B_BUTTON)
-                return 16;
-
-            if (gMain.newKeys & SELECT_BUTTON)
-            {
-                sub_809CD88();
-                return 0;
-            }
-
-            retVal = 0;
-        }
-    }
-    else
-    {
-        retVal = 1;
-        var0 = 3;
-        var1 = 0;
-        gPokemonStorageSystemPtr->unk_11e3 = 1;
-    }
-
-    if (retVal)
-    {
-        if (var0 != 2)
-            sub_809A860(0);
-        sub_809AF18(var0, var1);
-        return retVal;
+        if (cursorArea != 2)
+            sub_809A860(FALSE);
+        sub_809AF18(cursorArea, cursorPosition);
     }
 
     return retVal;
 }
 
-#ifdef NONMATCHING
 u8 sub_809C944(void)
 {
-    u8 r6;
-    s8 var0 = gUnknown_020384E4;
-    s8 var1 = gUnknown_020384E5;
+    u8 retVal;
+    s8 cursorArea;
+    s8 cursorPosition;
 
-    gPokemonStorageSystemPtr->unk_11df = 0;
-    gPokemonStorageSystemPtr->unk_11de = 0;
-    gPokemonStorageSystemPtr->unk_11e3 = 0;
-
-    if (!(gMain.newAndRepeatedKeys & DPAD_UP))
+    do
     {
-        if (gMain.newAndRepeatedKeys & (DPAD_DOWN | START_BUTTON))
+        cursorArea = sBoxCursorArea;
+        cursorPosition = sBoxCursorPosition;
+        gPokemonStorageSystemPtr->unk_11df = 0;
+        gPokemonStorageSystemPtr->unk_11de = 0;
+        gPokemonStorageSystemPtr->unk_11e3 = 0;
+
+        if (JOY_REPT(DPAD_UP))
         {
-            r6 = 1;
-            var0 = 2;
-            var1 = 0;
+            retVal = 1;
+            cursorArea = 0;
+            gPokemonStorageSystemPtr->unk_11de = -1;
+            if (sBoxCursorPosition == 0)
+                cursorPosition = 24;
+            else
+                cursorPosition = 29;
             gPokemonStorageSystemPtr->unk_11e3 = 1;
+            break;
         }
-        else if (gMain.newAndRepeatedKeys & DPAD_LEFT)
+
+        if (JOY_REPT(DPAD_DOWN | START_BUTTON))
         {
-            r6 = 1;
-            var1 -= 1;
-            if (var1 < 0)
+            retVal = 1;
+            cursorArea = 2;
+            cursorPosition = 0;
+            gPokemonStorageSystemPtr->unk_11e3 = 1;
+            break;
+        }
+
+        if (JOY_REPT(DPAD_LEFT))
+        {
+            retVal = 1;
+            if (--cursorPosition < 0)
             {
                 gPokemonStorageSystemPtr->unk_11df = -1;
-                var1 = 1;
+                cursorPosition = 1;
             }
+            break;
         }
-        else if (gMain.newAndRepeatedKeys & DPAD_RIGHT)
+
+        if (JOY_REPT(DPAD_RIGHT))
         {
-            r6 = 1;
-            var1 += 1;
-            if (var1 > 1)
+            retVal = 1;
+            if (++cursorPosition > 1)
             {
                 gPokemonStorageSystemPtr->unk_11df = 1;
-                var1 = 0;
+                cursorPosition = 0;
             }
+            break;
         }
-        else if (gMain.newKeys & A_BUTTON)
-        {
-            return var1 == 0 ? 5 : 4;
-        }
-        else if (gMain.newKeys & B_BUTTON)
-        {
+
+        if (JOY_NEW(A_BUTTON))
+            return (cursorPosition == 0) ? 5 : 4;
+        if (JOY_NEW(B_BUTTON))
             return 16;
-        }
-        else if (gMain.newKeys & SELECT_BUTTON)
+
+        if (JOY_NEW(SELECT_BUTTON))
         {
             sub_809CD88();
             return 0;
         }
-        else
-        {
-            r6 = 0;
-        }
-    }
-    else
+
+        retVal = 0;
+    } while (0);
+
+    if (retVal != 0)
     {
-        r6 = 1;
-        var0 = 0;
-        gPokemonStorageSystemPtr->unk_11de = -1;
-        var1 = !gUnknown_020384E5 ? 24 : 29;
-        gPokemonStorageSystemPtr->unk_11e3 = 1;
+        sub_809AF18(cursorArea, cursorPosition);
     }
 
-    if (r6)
-    {
-        sub_809AF18(var0, var1);
-    }
-
-    return r6;
+    return retVal;
 }
-#else
-NAKED
-u8 sub_809C944(void)
-{
-    asm(".syntax unified\n\
-    push {r4-r7,lr}\n\
-    ldr r0, _0809C988 @ =gUnknown_020384E4\n\
-    ldrb r0, [r0]\n\
-    mov r12, r0\n\
-    ldr r7, _0809C98C @ =gUnknown_020384E5\n\
-    ldrb r3, [r7]\n\
-    ldr r0, _0809C990 @ =gPokemonStorageSystemPtr\n\
-    ldr r1, [r0]\n\
-    ldr r0, _0809C994 @ =0x000011df\n\
-    adds r5, r1, r0\n\
-    movs r0, 0\n\
-    strb r0, [r5]\n\
-    ldr r2, _0809C998 @ =0x000011de\n\
-    adds r4, r1, r2\n\
-    strb r0, [r4]\n\
-    adds r2, 0x5\n\
-    adds r1, r2\n\
-    strb r0, [r1]\n\
-    ldr r6, _0809C99C @ =gMain\n\
-    ldrh r2, [r6, 0x30]\n\
-    movs r0, 0x40\n\
-    ands r0, r2\n\
-    cmp r0, 0\n\
-    bne _0809CA14\n\
-    movs r0, 0x88\n\
-    ands r0, r2\n\
-    cmp r0, 0\n\
-    beq _0809C9A0\n\
-    movs r6, 0x1\n\
-    movs r0, 0x2\n\
-    mov r12, r0\n\
-    movs r3, 0\n\
-    b _0809CA2A\n\
-    .align 2, 0\n\
-_0809C988: .4byte gUnknown_020384E4\n\
-_0809C98C: .4byte gUnknown_020384E5\n\
-_0809C990: .4byte gPokemonStorageSystemPtr\n\
-_0809C994: .4byte 0x000011df\n\
-_0809C998: .4byte 0x000011de\n\
-_0809C99C: .4byte gMain\n\
-_0809C9A0:\n\
-    movs r0, 0x20\n\
-    ands r0, r2\n\
-    cmp r0, 0\n\
-    beq _0809C9C0\n\
-    movs r6, 0x1\n\
-    lsls r0, r3, 24\n\
-    movs r1, 0xFF\n\
-    lsls r1, 24\n\
-    adds r0, r1\n\
-    lsrs r3, r0, 24\n\
-    cmp r0, 0\n\
-    bge _0809CA2C\n\
-    movs r0, 0xFF\n\
-    strb r0, [r5]\n\
-    movs r3, 0x1\n\
-    b _0809CA2C\n\
-_0809C9C0:\n\
-    movs r0, 0x10\n\
-    ands r0, r2\n\
-    cmp r0, 0\n\
-    beq _0809C9E0\n\
-    movs r6, 0x1\n\
-    lsls r0, r3, 24\n\
-    movs r2, 0x80\n\
-    lsls r2, 17\n\
-    adds r0, r2\n\
-    lsrs r3, r0, 24\n\
-    asrs r0, 24\n\
-    cmp r0, 0x1\n\
-    ble _0809CA2C\n\
-    strb r6, [r5]\n\
-    movs r3, 0\n\
-    b _0809CA2C\n\
-_0809C9E0:\n\
-    ldrh r1, [r6, 0x2E]\n\
-    movs r0, 0x1\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    beq _0809C9F4\n\
-    movs r0, 0x4\n\
-    cmp r3, 0\n\
-    bne _0809CA3A\n\
-    movs r0, 0x5\n\
-    b _0809CA3A\n\
-_0809C9F4:\n\
-    movs r0, 0x2\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    beq _0809CA00\n\
-    movs r0, 0x10\n\
-    b _0809CA3A\n\
-_0809CA00:\n\
-    movs r0, 0x4\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    beq _0809CA10\n\
-    bl sub_809CD88\n\
-    movs r0, 0\n\
-    b _0809CA3A\n\
-_0809CA10:\n\
-    movs r6, 0\n\
-    b _0809CA38\n\
-_0809CA14:\n\
-    movs r6, 0x1\n\
-    movs r0, 0\n\
-    mov r12, r0\n\
-    movs r0, 0xFF\n\
-    strb r0, [r4]\n\
-    movs r0, 0\n\
-    ldrsb r0, [r7, r0]\n\
-    movs r3, 0x1D\n\
-    cmp r0, 0\n\
-    bne _0809CA2A\n\
-    movs r3, 0x18\n\
-_0809CA2A:\n\
-    strb r6, [r1]\n\
-_0809CA2C:\n\
-    cmp r6, 0\n\
-    beq _0809CA38\n\
-    mov r0, r12\n\
-    adds r1, r3, 0\n\
-    bl sub_809AF18\n\
-_0809CA38:\n\
-    adds r0, r6, 0\n\
-_0809CA3A:\n\
-    pop {r4-r7}\n\
-    pop {r1}\n\
-    bx r1\n\
-    .syntax divided\n");
-}
-#endif // NONMATCHING
 
 u8 sub_809CA40(void)
 {
     u16 i = 0;
     while (gUnknown_083BBBD4[i].func != NULL)
     {
-        if (gUnknown_083BBBD4[i].unk4 == gUnknown_020384E4)
+        if (gUnknown_083BBBD4[i].unk4 == sBoxCursorArea)
             return gUnknown_083BBBD4[i].func();
         i++;
     }
@@ -3226,7 +2309,7 @@ bool8 sub_809CAB0(void)
     sub_809CDEC(6);
     if (gPokemonStorageSystemPtr->unk_0005 == 2)
     {
-        if (!gUnknown_020384E4)
+        if (!sBoxCursorArea)
             sub_809CDEC(2);
         else
             sub_809CDEC(1);
@@ -3246,14 +2329,14 @@ void sub_809CB74(struct Sprite *sprite)
 
 void sub_809CB94(struct Pokemon *mon)
 {
-    if (gUnknown_020384E4 == 1)
+    if (sBoxCursorArea == 1)
     {
-        mon->box = gPlayerParty[gUnknown_020384E5].box;
+        mon->box = gPlayerParty[sBoxCursorPosition].box;
     }
     else
     {
         u8 boxId = get_preferred_box();
-        mon->box = gPokemonStorage.boxes[boxId][gUnknown_020384E5];
+        mon->box = gPokemonStorage.boxes[boxId][sBoxCursorPosition];
     }
 }
 
@@ -3272,7 +2355,7 @@ void sub_809CC04(void)
     gPokemonStorageSystemPtr->unk_11e4[0] = IndexOfSpritePaletteTag(0xDAC6);
     gPokemonStorageSystemPtr->unk_11e4[1] = IndexOfSpritePaletteTag(0xDAD1);
 
-    sub_809AACC(gUnknown_020384E4, gUnknown_020384E5, &x, &y);
+    sub_809AACC(sBoxCursorArea, sBoxCursorPosition, &x, &y);
     spriteId = CreateSprite(&gSpriteTemplate_83BBC70, x, y, 6);
     if (spriteId != MAX_SPRITES)
     {
@@ -3286,7 +2369,7 @@ void sub_809CC04(void)
         gPokemonStorageSystemPtr->unk_11c0 = NULL;
     }
 
-    if (gUnknown_020384E4 == 1)
+    if (sBoxCursorArea == 1)
     {
         subpriority = 12;
         priority = 1;
@@ -3302,8 +2385,8 @@ void sub_809CC04(void)
     {
         gPokemonStorageSystemPtr->unk_11c4 = &gSprites[spriteId];
         gPokemonStorageSystemPtr->unk_11c4->oam.priority = priority;
-        if (gUnknown_020384E4)
-            gPokemonStorageSystemPtr->unk_11c4->invisible = 1;
+        if (sBoxCursorArea)
+            gPokemonStorageSystemPtr->unk_11c4->invisible = TRUE;
     }
     else
     {
@@ -3369,44 +2452,46 @@ void sub_809CE84(void)
         gPokemonStorageSystemPtr->unk_11b9);
 }
 
-#ifdef NONMATCHING // r4 and r5 are swapped throughout the entire function.
 s16 sub_809CF30(void)
 {
     int textId = -2;
 
-    if (!(gMain.newKeys & A_BUTTON))
+    do
     {
-        if (gMain.newKeys & B_BUTTON)
+        if (!(JOY_NEW(A_BUTTON)))
         {
-            PlaySE(5);
-            textId++;
+            if (JOY_NEW(B_BUTTON))
+            {
+                PlaySE(SE_SELECT);
+                textId++;
+            }
+
+            if (JOY_NEW(DPAD_UP))
+            {
+                PlaySE(SE_SELECT);
+                Menu_MoveCursor(-1);
+            }
+            else if (JOY_NEW(DPAD_DOWN))
+            {
+                PlaySE(SE_SELECT);
+                Menu_MoveCursor(1);
+            }
+        }
+        else
+        {
+            textId = Menu_GetCursorPos();
         }
 
-        if (gMain.newKeys & DPAD_UP)
+        if (textId != -2)
         {
-            PlaySE(5);
-            Menu_MoveCursor(-1);
+            Menu_DestroyCursor();
+            Menu_EraseWindowRect(
+                gPokemonStorageSystemPtr->unk_11ba,
+                gPokemonStorageSystemPtr->unk_11bc,
+                29,
+                15);
         }
-        else if (gMain.newKeys & DPAD_DOWN)
-        {
-            PlaySE(5);
-            Menu_MoveCursor(1);
-        }
-    }
-    else
-    {
-        textId = Menu_GetCursorPos();
-    }
-
-    if (textId != -2)
-    {
-        Menu_DestroyCursor();
-        Menu_EraseWindowRect(
-            gPokemonStorageSystemPtr->unk_11ba,
-            gPokemonStorageSystemPtr->unk_11bc,
-            29,
-            15);
-    }
+    } while (0);
 
     if (textId >= 0)
     {
@@ -3415,95 +2500,6 @@ s16 sub_809CF30(void)
 
     return textId;
 }
-#else
-NAKED
-s16 sub_809CF30(void)
-{
-    asm(".syntax unified\n\
-    push {r4,r5,lr}\n\
-    movs r5, 0x2\n\
-    negs r5, r5\n\
-    ldr r4, _0809CF6C @ =gMain\n\
-    ldrh r1, [r4, 0x2E]\n\
-    movs r0, 0x1\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    bne _0809CF86\n\
-    movs r0, 0x2\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    beq _0809CF52\n\
-    movs r0, 0x5\n\
-    bl PlaySE\n\
-    adds r5, 0x1\n\
-_0809CF52:\n\
-    ldrh r1, [r4, 0x2E]\n\
-    movs r0, 0x40\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    beq _0809CF70\n\
-    movs r0, 0x5\n\
-    bl PlaySE\n\
-    movs r0, 0x1\n\
-    negs r0, r0\n\
-    bl Menu_MoveCursor\n\
-    b _0809CF8E\n\
-    .align 2, 0\n\
-_0809CF6C: .4byte gMain\n\
-_0809CF70:\n\
-    movs r0, 0x80\n\
-    ands r0, r1\n\
-    cmp r0, 0\n\
-    beq _0809CF8E\n\
-    movs r0, 0x5\n\
-    bl PlaySE\n\
-    movs r0, 0x1\n\
-    bl Menu_MoveCursor\n\
-    b _0809CF8E\n\
-_0809CF86:\n\
-    bl Menu_GetCursorPos\n\
-    lsls r0, 24\n\
-    lsrs r5, r0, 24\n\
-_0809CF8E:\n\
-    movs r0, 0x2\n\
-    negs r0, r0\n\
-    cmp r5, r0\n\
-    beq _0809CFB2\n\
-    bl Menu_DestroyCursor\n\
-    ldr r0, _0809CFD0 @ =gPokemonStorageSystemPtr\n\
-    ldr r1, [r0]\n\
-    ldr r2, _0809CFD4 @ =0x000011ba\n\
-    adds r0, r1, r2\n\
-    ldrb r0, [r0]\n\
-    adds r2, 0x2\n\
-    adds r1, r2\n\
-    ldrb r1, [r1]\n\
-    movs r2, 0x1D\n\
-    movs r3, 0xF\n\
-    bl Menu_EraseWindowRect\n\
-_0809CFB2:\n\
-    cmp r5, 0\n\
-    blt _0809CFC4\n\
-    ldr r0, _0809CFD0 @ =gPokemonStorageSystemPtr\n\
-    ldr r0, [r0]\n\
-    lsls r1, r5, 3\n\
-    ldr r2, _0809CFD8 @ =0x00001184\n\
-    adds r0, r2\n\
-    adds r0, r1\n\
-    ldr r5, [r0]\n\
-_0809CFC4:\n\
-    lsls r0, r5, 16\n\
-    asrs r0, 16\n\
-    pop {r4,r5}\n\
-    pop {r1}\n\
-    bx r1\n\
-    .align 2, 0\n\
-_0809CFD0: .4byte gPokemonStorageSystemPtr\n\
-_0809CFD4: .4byte 0x000011ba\n\
-_0809CFD8: .4byte 0x00001184\n\
-    .syntax divided\n");
-}
-#endif // NONMATCHING
 
 void sub_809CFDC(struct UnkStruct_2000020 *arg0, struct UnkStruct_2000028 *arg1, u8 arg2)
 {
@@ -3555,7 +2551,7 @@ void sub_809D0BC(struct UnkStruct_2000028 *unkStruct)
     int width = unkStruct->unk_08;
     for (i = 0; i < height; i++)
     {
-        CpuSet(src, dest, (width / 2) & 0x1FFFFF);
+        CpuCopy16(src, dest, width);
         dest += 64;
         src += 64;
     }
@@ -3569,7 +2565,7 @@ void sub_809D104(u8 *dest, u16 dLeft, u16 dTop, const u8 *src, u16 sLeft, u16 sT
     int width2 = width * 2;
     while (to < end)
     {
-        CpuSet(from, to, (width2 / 2) & 0x1FFFFF);
+        CpuCopy16(from, to, width2);
         to += 64;
         from += 64;
     }

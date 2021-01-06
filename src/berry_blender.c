@@ -180,8 +180,8 @@ s8 GetFirstFreePokeblockSlot(void);
 extern void de_sub_8073110();
 #endif
 
-extern struct MusicPlayerInfo gMPlay_SE2;
-extern struct MusicPlayerInfo gMPlay_BGM;
+extern struct MusicPlayerInfo gMPlayInfo_SE2;
+extern struct MusicPlayerInfo gMPlayInfo_BGM;
 extern u16 gSpecialVar_ItemId;
 extern u8 gUnknown_020297ED;
 extern u8 byte_3002A68;
@@ -214,14 +214,14 @@ u16 gUnknown_03004840[10];
 struct BerryBlenderData* gBerryBlenderData;
 
 // iwram bss
-IWRAM_DATA s16 gUnknown_03000510[8];
-IWRAM_DATA s16 gUnknown_03000520[6];
-IWRAM_DATA s16 gUnknown_0300052C;
-IWRAM_DATA s16 gUnknown_0300052E;
-IWRAM_DATA s32 gUnknown_03000530[6];
-IWRAM_DATA s32 gUnknown_03000548[5];
-IWRAM_DATA u32 gUnknown_0300055C;
-IWRAM_DATA struct BlenderDebug sBlenderDebug;
+static s16 gUnknown_03000510[8];
+static s16 gUnknown_03000520[6];
+static s16 gUnknown_0300052C;
+static s16 gUnknown_0300052E;
+static s32 gUnknown_03000530[6];
+static s32 gUnknown_03000548[5];
+static u32 gUnknown_0300055C;
+static struct BlenderDebug sBlenderDebug;
 
 // this file's functions
 void Blender_SetBankBerryData(u8 bank, u16 itemID);
@@ -778,7 +778,7 @@ static const u8 sNewLineString_2[] = _("\n");
 
 static void Blender_ControlHitPitch(void)
 {
-    m4aMPlayPitchControl(&gMPlay_SE2, 0xFFFF, (gBerryBlenderData->field_56 - 128) * 2);
+    m4aMPlayPitchControl(&gMPlayInfo_SE2, 0xFFFF, (gBerryBlenderData->field_56 - 128) * 2);
 }
 
 static void VBlankCB0_BerryBlender(void)
@@ -970,7 +970,7 @@ void sub_804E738(struct Sprite* sprite)
         if (++sprite->data[5] > 3)
             DestroySprite(sprite);
         else
-            PlaySE(SE_TB_KARA);
+            PlaySE(SE_BALL_TRAY_EXIT);
     }
     sprite->pos1.x = sprite->data[1];
     sprite->pos1.y = sprite->data[2];
@@ -1258,7 +1258,7 @@ static void sub_804E9F8(void)
         break;
     case 102:
         if (!gPaletteFade.active)
-            SetMainCallback2(c2_exit_to_overworld_1_continue_scripts_restart_music);
+            SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
         break;
     }
     RunTasks();
@@ -1451,7 +1451,7 @@ static void sub_804F378(void)
     case 13:
         gBerryBlenderData->field_0++;
         sub_804F238();
-        PlaySE(SE_RU_HYUU);
+        PlaySE(SE_FALL);
         sub_8051414(&gBerryBlenderData->field_168);
         break;
     case 14:
@@ -1465,7 +1465,7 @@ static void sub_804F378(void)
             gBerryBlenderData->arrowPos = gUnknown_082162F8[gUnknown_08216300[gBerryBlenderData->playersNo - 2]];
             REG_BG2CNT = 0x4882;
             gBerryBlenderData->framesToWait = 0;
-            PlaySE(SE_TRACK_DOOR);;
+            PlaySE(SE_TRUCK_DOOR);;
             sub_804F2A8();
         }
         sub_8051414(&gBerryBlenderData->field_168);
@@ -1508,7 +1508,7 @@ static void sub_804F378(void)
             gBerryBlenderData->field_178 = GetCurrentMapMusic();
         }
         PlayBGM(MUS_CYCLING);
-        PlaySE(SE_MOTER);
+        PlaySE(SE_BERRY_BLENDER);
         Blender_ControlHitPitch();
         break;
     }
@@ -1699,17 +1699,17 @@ static void sub_804FC48(u16 a0, u8 a1)
     {
         StartSpriteAnim(&gSprites[spriteID], 2);
         gSprites[spriteID].callback = sub_8051684;
-        PlaySE(SE_RU_GASHIN);
+        PlaySE(SE_ICE_STAIRS);
     }
     else if (a0 == 0x5432)
     {
         StartSpriteAnim(&gSprites[spriteID], 0);
-        PlaySE(SE_SEIKAI);
+        PlaySE(SE_SUCCESS);
     }
     else if (a0 == 0x2345)
     {
         StartSpriteAnim(&gSprites[spriteID], 1);
-        PlaySE(SE_HAZURE);
+        PlaySE(SE_FAILURE);
     }
     sub_805156C();
 }
@@ -1793,9 +1793,9 @@ static void sub_804FE70(void)
             if (gRecvCmds[2][i] == 0x2345 || gRecvCmds[2][i] == 0x4523 || gRecvCmds[2][i] == 0x5432)
             {
                 if (gBerryBlenderData->field_56 > 1500)
-                    m4aMPlayTempoControl(&gMPlay_BGM, ((gBerryBlenderData->field_56 - 750) / 20) + 256);
+                    m4aMPlayTempoControl(&gMPlayInfo_BGM, ((gBerryBlenderData->field_56 - 750) / 20) + 256);
                 else
-                    m4aMPlayTempoControl(&gMPlay_BGM, 256);
+                    m4aMPlayTempoControl(&gMPlayInfo_BGM, 256);
             }
         }
     }
@@ -1888,7 +1888,12 @@ u32 Blender_GetPokeblockColor(struct BlenderBerry* berries, s16* a1, u8 playersN
     s32 r6;
     u8 r2;
 
-    for (i = 0; i <= 5; i++) // bug, writing one index too far
+    // bug, writing one index too far
+#ifdef UBFIX
+    for (i = 0; i < 5; i++)
+#else
+    for (i = 0; i <= 5; i++)
+#endif //UBFIX
         vars[i] = a1[i];
     r6 = 0;
     for (i = 0; i < 5; i++)
@@ -2164,7 +2169,7 @@ static void sub_8050954(void)
     {
     case 1:
         ClearLinkCallback();
-        m4aMPlayTempoControl(&gMPlay_BGM, 256);
+        m4aMPlayTempoControl(&gMPlayInfo_BGM, 256);
         for (i = 0; i < gSpecialVar_0x8004; i++)
         {
             DestroyTask(gBerryBlenderData->field_148[i]);
@@ -2181,7 +2186,7 @@ static void sub_8050954(void)
             else
                 gBerryBlenderData->field_6F = 5;
             gBerryBlenderData->field_0 = 0;
-            m4aMPlayStop(&gMPlay_SE2);
+            m4aMPlayStop(&gMPlayInfo_SE2);
         }
         Blender_ControlHitPitch();
         break;
@@ -2480,7 +2485,7 @@ static void sub_8050E30(void)
         break;
     case 12:
         if (gReceivedRemoteLinkPlayers == 0)
-            SetMainCallback2(c2_exit_to_overworld_1_continue_scripts_restart_music);
+            SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
         break;
     }
 
@@ -2529,7 +2534,7 @@ static void sub_80510E8(void)
             if (gBerryBlenderData->field_7C == 0)
                 SetMainCallback2(DoBerryBlending);
             else
-                SetMainCallback2(c2_exit_to_overworld_1_continue_scripts_restart_music);
+                SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
         }
         break;
     }
@@ -2765,7 +2770,7 @@ static void sub_805181C(struct Sprite* sprite)
         {
             sprite->data[1] = 88;
             sprite->data[0]++;
-            PlaySE(SE_KON);
+            PlaySE(SE_BALL_BOUNCE_1);
         }
         break;
     case 1:
@@ -3271,6 +3276,13 @@ void debug_sub_80524BC(void)
     SetMainCallback2(sub_8052AF8);
 }
 
+// Partially fixes the clipping on longer names.
+#if DEBUG_FIX
+#  define BLENDER_DEBUG_BERRY_LEN 12
+#else
+#  define BLENDER_DEBUG_BERRY_LEN 6
+#endif
+
 static void BlenderDebug_PrintBerryData(void)
 {
     u8 text[128];
@@ -3294,8 +3306,8 @@ static void BlenderDebug_PrintBerryData(void)
         else
         {
             CopyItemName(sBlenderDebug.berries[i] + 133, &text[0]);
-            text[6] = CHAR_SPACE;
-            text[7] = EOS;
+            text[BLENDER_DEBUG_BERRY_LEN] = CHAR_SPACE;
+            text[BLENDER_DEBUG_BERRY_LEN + 1] = EOS;
         }
         var = (i * 3) + 3;
         Menu_PrintText(text, 2, var);
@@ -3318,7 +3330,7 @@ static void BlenderDebug_PrintBerryData(void)
         ConvertIntToDecimalStringN(&text[15], gBerries[sBlenderDebug.berries[i]].smoothness, 2, 2);
 
         text[17] = EOS;
-        Menu_PrintText(text, 7, var);
+        Menu_PrintText(text, BLENDER_DEBUG_BERRY_LEN + 1, var);
     }
     if (sBlenderDebug.pokeblock.color != 0)
     {
@@ -3343,7 +3355,7 @@ static void BlenderDebug_PrintBerryData(void)
         ConvertIntToHexStringN(&text[15], sBlenderDebug.feel, 2, 2);
 
         text[17] = EOS;
-        Menu_PrintText(text, 7, 17);
+        Menu_PrintText(text, BLENDER_DEBUG_BERRY_LEN + 1, 17);
     }
 }
 
@@ -3525,7 +3537,7 @@ static void sub_8052BD0(u8 taskID)
 {
     if (gTasks[taskID].data[0] == 0)
     {
-        PlayFanfare(MUS_FANFA1);
+        PlayFanfare(MUS_LEVEL_UP);
         gTasks[taskID].data[0]++;
     }
     if (IsFanfareTaskInactive())

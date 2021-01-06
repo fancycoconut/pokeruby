@@ -57,14 +57,14 @@ bool8 NoharaDebugMenu_LegendsFlagOn(void);
 bool8 NoharaDebugMenu_AddNumWinningStreaks(void);
 
 const u8 gUnknown_Debug_083C48C4[] = _("TV");
-const u8 gUnknown_Debug_083C48C7[] = _("Fan");
-const u8 gUnknown_Debug_083C48CB[] = _("Battle　(vs　Dad)");
-const u8 gUnknown_Debug_083C48DB[] = _("Dad　after　battle");
-const u8 gUnknown_Debug_083C48EC[] = _("SOOTOPOLIS　CITY");
-const u8 gUnknown_Debug_083C48FC[] = _("Embark");
-const u8 gUnknown_Debug_083C4903[] = _("Yes　9999");
-const u8 gUnknown_Debug_083C490C[] = _("Legends　flag　ON");
-const u8 gUnknown_Debug_083C491C[] = _("Add　num　of　winning　streaks");
+const u8 gUnknown_Debug_083C48C7[] = DTR("Fan", "LILYCOVE TRAINER FAN CLUB");
+const u8 gUnknown_Debug_083C48CB[] = _("Battle (vs Dad)");
+const u8 gUnknown_Debug_083C48DB[] = _("Dad after battle");
+const u8 gUnknown_Debug_083C48EC[] = _("SOOTOPOLIS CITY");
+const u8 gUnknown_Debug_083C48FC[] = DTR("Embark", "Reset Mr. BRINEY");
+const u8 gUnknown_Debug_083C4903[] = _("Yes 9999");
+const u8 gUnknown_Debug_083C490C[] = _("Legends flag ON");
+const u8 gUnknown_Debug_083C491C[] = _("Add num of winning streaks");
 
 const struct MenuAction gUnknown_Debug_083C4938[] = {
     {gUnknown_Debug_083C48C4, NoharaDebugMenu_TV},
@@ -104,28 +104,35 @@ bool8 debug_sub_808F414(void)
     }
 }
 
-const u8 gUnknown_Debug_083C4980[] = _("Want　to　change　data　type{CLEAR_TO 143}Press　Left\n"
-                                       "to　see　secret　type　now？{CLEAR_TO 143}to　switch");
+#if (ENGLISH && REVISION == 0)
+const u8 gUnknown_Debug_083C4980[] = _("ひみつがたを すぐみれるように    ひだりキーで\n"
+                                       "データタイプを へんこうしますか？  きりかえ");
+#else
+const u8 gUnknown_Debug_083C4980[] = _("Want to change data type{CLEAR_TO 143}Press　Left\n"
+                                       "to see secret type now？{CLEAR_TO 143}to　switch");
+#endif
 
-const u8 gUnknown_Debug_083C49CA[] = _("Choose　the　TV　data　you　wish　to\n"
-                                       "create　to　check　a　transmission。");
+const u8 gUnknown_Debug_083C49CA[] = _("Choose the TV data you wish to\n"
+                                       "create to check a transmission。");
 
-const u8 gUnknown_Debug_083C4A09[] = _("ほうそうの　はっせいりつを　セット\n"
-                                       "してください　？ぶんの1に　なります");
+const u8 gUnknown_Debug_083C4A09[] = DTR("ほうそうの　はっせいりつを　セット\n"
+                                         "してください　？ぶんの1に　なります",
+                                         "Please set the transmission frequency\n"
+                                         "Part 1");
 
 const u8 gUnknown_Debug_083C4A2E[] = _("SURVEY");
-const u8 gUnknown_Debug_083C4A35[] = _("RECENT　HAPPENINGS");
-const u8 gUnknown_Debug_083C4A47[] = _("POKひMON　FAN　CLUB");
-const u8 gUnknown_Debug_083C4A58[] = _("ジム");
+const u8 gUnknown_Debug_083C4A35[] = _("RECENT HAPPENINGS");
+const u8 gUnknown_Debug_083C4A47[] = _("POKéMON FAN CLUB");
+const u8 gUnknown_Debug_083C4A58[] = DTR("ジム", "GYM");
 const u8 gUnknown_Debug_083C4A5B[] = _("OUTBREAKS");
-const u8 gUnknown_Debug_083C4A65[] = _("NAME　RATER");
+const u8 gUnknown_Debug_083C4A65[] = _("NAME RATER");
 const u8 gUnknown_Debug_083C4A70[] = _("CONTEST");
 const u8 gUnknown_Debug_083C4A78[] = _("INTRODUCTION");
 const u8 gUnknown_Debug_083C4A85[] = _("SHOPPING");
 const u8 gUnknown_Debug_083C4A8E[] = _("MISFORTUNE");
 const u8 gUnknown_Debug_083C4A99[] = _("FISHING");
-const u8 gUnknown_Debug_083C4AA1[] = _("MEMORABLE　DAY");
-const u8 gUnknown_Debug_083C4AAF[] = _("BRAVO　TRAINER");
+const u8 gUnknown_Debug_083C4AA1[] = _("MEMORABLE DAY");
+const u8 gUnknown_Debug_083C4AAF[] = _("BRAVO TRAINER");
 
 const u8 gUnknown_Debug_083C4ABD[] = {
     TVSHOW_FAN_CLUB_LETTER,
@@ -159,8 +166,8 @@ const u8 *const gUnknown_Debug_083C4ACC[] = {
 
 const u8 gDebugText_BigSale[] = _("BIG SALE");
 
-const u8 gUnknown_Debug_083C4B05[] = _("SERVICE　DAY");
-const u8 gUnknown_Debug_083C4B11[] = _("CLEARーOUT　SALE");
+const u8 gUnknown_Debug_083C4B05[] = _("SERVICE DAY");
+const u8 gUnknown_Debug_083C4B11[] = _("CLEAR-OUT SALE");
 const u8 gUnknown_Debug_083C4B20[] = {1, 2, 3};
 
 const u8 *const gUnknown_Debug_083C4B24[] = {
@@ -169,15 +176,15 @@ const u8 *const gUnknown_Debug_083C4B24[] = {
     gUnknown_Debug_083C4B11
 };
 
-const u8 gUnknown_Debug_083C4B30[] = _("Secret　type");
+const u8 gUnknown_Debug_083C4B30[] = _("Secret type");
 const u8 gUnknown_Debug_083C4B3C[] = _("Start");
-const u8 gUnknown_Debug_083C4B42[] = _("Create　TV");
-const u8 gUnknown_Debug_083C4B4C[] = _("All　clear");
-const u8 gUnknown_Debug_083C4B56[] = _("All　seen");
-const u8 gUnknown_Debug_083C4B5F[] = _("Create　CM");
-const u8 gUnknown_Debug_083C4B69[] = _("Not　yet　seen");
-const u8 gUnknown_Debug_083C4B76[] = _("Hit　Table");
-const u8 gUnknown_Debug_083C4B80[] = _("Set　full");
+const u8 gUnknown_Debug_083C4B42[] = _("Create TV");
+const u8 gUnknown_Debug_083C4B4C[] = _("All clear");
+const u8 gUnknown_Debug_083C4B56[] = _("All seen");
+const u8 gUnknown_Debug_083C4B5F[] = _("Create CM");
+const u8 gUnknown_Debug_083C4B69[] = _("Not yet seen");
+const u8 gUnknown_Debug_083C4B76[] = _("Hit Table");
+const u8 gUnknown_Debug_083C4B80[] = _("Set full");
 
 // Normaly these would be struct MenuAction, but the prototype of
 // member .func is not consistent.
@@ -468,6 +475,11 @@ void debug_sub_808FA88(u8 a0, u8 a1)
     u8 leadMonIndex = GetLeadMonIndex();
     u8 channel;
 
+// This is garbage.
+#define GF_ACCESS(x) ((struct x*)(&(gSaveBlock1.tvShows[a0])))
+#define TERU_ACCESS(x) show->x
+#define DECLARE_TERU_POINTER TVShow * show = gSaveBlock1.tvShows + a0
+
     gSaveBlock1.tvShows[a0].common.kind = a1;
     gSaveBlock1.tvShows[a0].common.active = TRUE;
     for (i = 0; i < 0x22; i++)
@@ -478,34 +490,31 @@ void debug_sub_808FA88(u8 a0, u8 a1)
     {
         case 2:
         case 4:
-            sub_80BE160(gSaveBlock1.tvShows + a0);
+            sub_80BE160(&gSaveBlock1.tvShows[a0]);
             break;
         case 3:
-            sub_80BE138(gSaveBlock1.tvShows + a0);
+            sub_80BE138(&gSaveBlock1.tvShows[a0]);
             break;
     }
 
+#if (ENGLISH && REVISION == 0)
     switch (a1)
     {
         case TVSHOW_FAN_CLUB_LETTER:
         case TVSHOW_RECENT_HAPPENINGS:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            
-            show->fanclubLetter.species = SPECIES_BULBASAUR;
-            StringCopy(gSaveBlock1.tvShows[a0].fanclubLetter.playerName, gSaveBlock2.playerName);
-            show->fanclubLetter.language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowFanClubLetter)->species = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowFanClubLetter)->playerName, gSaveBlock2.playerName);
+            GF_ACCESS(TVShowFanClubLetter)->language = GAME_LANGUAGE;
             break;
         }
         case TVSHOW_PKMN_FAN_CLUB_OPINIONS:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            
-            show->fanclubOpinions.var02 = 1;
-            StringCopy(gSaveBlock1.tvShows[a0].fanclubOpinions.playerName, gSaveBlock2.playerName);
-            GetMonData(gPlayerParty + leadMonIndex, MON_DATA_NICKNAME, gSaveBlock1.tvShows[a0].fanclubOpinions.var10);
-            show->fanclubOpinions.language = GAME_LANGUAGE;
-            show->fanclubOpinions.var0E = GetMonData(gPlayerParty + leadMonIndex, MON_DATA_LANGUAGE);
+            GF_ACCESS(TVShowFanclubOpinions)->var02 = 1;
+            StringCopy(GF_ACCESS(TVShowFanclubOpinions)->playerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowFanclubOpinions)->var10);
+            GF_ACCESS(TVShowFanclubOpinions)->language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowFanclubOpinions)->var0E = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
             break;
         }
         case TVSHOW_UNKN_SHOWTYPE_04:
@@ -514,120 +523,222 @@ void debug_sub_808FA88(u8 a0, u8 a1)
         }
         case TVSHOW_NAME_RATER_SHOW:
         {
-            u16 species = GetMonData(gPlayerParty + leadMonIndex, MON_DATA_SPECIES);
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            
-            show->nameRaterShow.species = species;
-            show->nameRaterShow.var1C = 1;
-            StringCopy(gSaveBlock1.tvShows[a0].nameRaterShow.trainerName, gSaveBlock2.playerName);
-            GetMonData(gPlayerParty + leadMonIndex, MON_DATA_NICKNAME, gSaveBlock1.tvShows[a0].nameRaterShow.pokemonName);
-            show->nameRaterShow.language = GAME_LANGUAGE;
-            show->nameRaterShow.pokemonNameLanguage = GetMonData(gPlayerParty + leadMonIndex, MON_DATA_LANGUAGE);
+            GF_ACCESS(TVShowNameRaterShow)->species = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_SPECIES);
+            GF_ACCESS(TVShowNameRaterShow)->var1C = 1;
+            StringCopy(GF_ACCESS(TVShowNameRaterShow)->trainerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowNameRaterShow)->pokemonName);
+            GF_ACCESS(TVShowNameRaterShow)->language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowNameRaterShow)->pokemonNameLanguage = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
             break;
         }
         case TVSHOW_BRAVO_TRAINER_POKEMON_PROFILE:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            
-            show->bravoTrainer.species = SPECIES_BULBASAUR;
-            StringCopy(gSaveBlock1.tvShows[a0].bravoTrainer.playerName, gSaveBlock2.playerName);
-            GetMonData(gPlayerParty + leadMonIndex, MON_DATA_NICKNAME, gSaveBlock1.tvShows[a0].bravoTrainer.pokemonNickname);
-            show->bravoTrainer.language = GAME_LANGUAGE;
-            show->bravoTrainer.var1f = GetMonData(gPlayerParty + leadMonIndex, MON_DATA_LANGUAGE);
+            GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->species = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->playerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->pokemonNickname);
+            GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->var1f = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
             break;
         }
         case TVSHOW_BRAVO_TRAINER_BATTLE_TOWER_PROFILE:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            
-            show->bravoTrainerTower.species = SPECIES_BULBASAUR;
-            show->bravoTrainerTower.defeatedSpecies = SPECIES_BULBASAUR;
-            StringCopy(gSaveBlock1.tvShows[a0].bravoTrainerTower.trainerName, gSaveBlock2.playerName);
-            StringCopy(gSaveBlock1.tvShows[a0].bravoTrainerTower.enemyTrainerName, gSaveBlock2.playerName);
-            show->bravoTrainerTower.language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->species = SPECIES_BULBASAUR;
+            GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->defeatedSpecies = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->trainerName, gSaveBlock2.playerName);
+            StringCopy(GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->enemyTrainerName, gSaveBlock2.playerName);
+            GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->language = GAME_LANGUAGE;
             break;
         }
         case TVSHOW_MASS_OUTBREAK:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-
-            show->massOutbreak.species = SPECIES_BULBASAUR;
-            show->massOutbreak.daysLeft = 1;
+            GF_ACCESS(TVShowMassOutbreak)->species = SPECIES_BULBASAUR;
+            GF_ACCESS(TVShowMassOutbreak)->daysLeft = 1;
             break;
         }
         case TVSHOW_POKEMON_TODAY_CAUGHT:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
-            u8 gUnknown_Debug_083C4C6C[] = _("TERUTERUDA");
-
-            show->pokemonToday.var12 = 255;
-            StringCopy(show->pokemonToday.playerName, gUnknown_Debug_083C4C64);
-            StringCopy(show->pokemonToday.nickname, gUnknown_Debug_083C4C6C);
-            show->pokemonToday.ball = ITEM_PREMIER_BALL;
-            show->pokemonToday.species = SPECIES_WIGGLYTUFF;
-            show->pokemonToday.language = GAME_LANGUAGE;
-            show->pokemonToday.language2 = GAME_LANGUAGE;
+            GF_ACCESS(TVShowPokemonToday)->species = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowPokemonToday)->playerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowPokemonToday)->nickname);
+            GF_ACCESS(TVShowPokemonToday)->language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowPokemonToday)->language2 = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
             break;
         }
         case TVSHOW_SMART_SHOPPER:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
-            int ii;
-
-            for (ii = 0; ii < 3; ii++)
-                show->smartshopperShow.itemAmounts[ii] = 254;
-            show->smartshopperShow.priceReduced = TRUE;
-            show->smartshopperShow.shopLocation = 40;
-            for (ii = 0; ii < 3; ii++)
-                show->smartshopperShow.itemIds[ii] = ITEM_ENERGY_POWDER;
-            StringCopy(show->smartshopperShow.playerName, gUnknown_Debug_083C4C64);
-            show->smartshopperShow.language = GAME_LANGUAGE;
+            StringCopy(GF_ACCESS(TVShowSmartShopper)->playerName, gSaveBlock2.playerName);
+            GF_ACCESS(TVShowSmartShopper)->language = GAME_LANGUAGE;
             break;
         }
         case TVSHOW_POKEMON_TODAY_FAILED:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
-
-            show->pokemonTodayFailed.species = SPECIES_WIGGLYTUFF;
-            show->pokemonTodayFailed.species2 = SPECIES_WIGGLYTUFF;
-            show->pokemonTodayFailed.var12 = 3;
-            show->pokemonTodayFailed.var10 = 0xff;
-            show->pokemonTodayFailed.var11 = 1;
-            StringCopy(show->pokemonTodayFailed.playerName, gUnknown_Debug_083C4C64);
-            show->pokemonTodayFailed.language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowPokemonTodayFailed)->species = SPECIES_BULBASAUR;
+            GF_ACCESS(TVShowPokemonTodayFailed)->species2 = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowPokemonTodayFailed)->playerName, gSaveBlock2.playerName);
+            GF_ACCESS(TVShowPokemonTodayFailed)->language = GAME_LANGUAGE;
             break;
         }
         case TVSHOW_FISHING_ADVICE:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
-
-            show->pokemonAngler.var02 = 0xff;
-            show->pokemonAngler.var03 = 0;
-            show->pokemonAngler.var04 = 40;
-            StringCopy(show->pokemonAngler.playerName, gUnknown_Debug_083C4C64);
-            show->pokemonAngler.language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowPokemonAngler)->var04 = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowPokemonAngler)->playerName, gSaveBlock2.playerName);
+            GF_ACCESS(TVShowPokemonAngler)->language = GAME_LANGUAGE;
             break;
         }
         case TVSHOW_WORLD_OF_MASTERS:
         {
-            TVShow * show = gSaveBlock1.tvShows + a0;
-            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
-
-            show->worldOfMasters.var02 = 0xffff;
-            show->worldOfMasters.var06 = 0xffff;
-            show->worldOfMasters.var04 = 40;
-            show->worldOfMasters.var08 = 40;
-            show->worldOfMasters.var0a = 3;
-            StringCopy(show->worldOfMasters.playerName, gUnknown_Debug_083C4C64);
-            show->worldOfMasters.language = GAME_LANGUAGE;
+            GF_ACCESS(TVShowWorldOfMasters)->var04 = SPECIES_BULBASAUR;
+            GF_ACCESS(TVShowWorldOfMasters)->var08 = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowWorldOfMasters)->playerName, gSaveBlock2.playerName);
+            GF_ACCESS(TVShowWorldOfMasters)->language = GAME_LANGUAGE;
             break;
         }
-
     }
+#else
+// Murakawa must have really hated working with GF code. He devised his own, less complicated
+// access method after US rev0. Also, this iteration of the code has his self inserts: TERUKUN,
+// TERU, and TERUDA. Who all love Wigglytuff.
+    switch (a1)
+    {
+        case TVSHOW_FAN_CLUB_LETTER:
+        case TVSHOW_RECENT_HAPPENINGS:
+        {
+            DECLARE_TERU_POINTER;
+            
+            GF_ACCESS(TVShowFanClubLetter)->species = SPECIES_BULBASAUR; // Yet he didn't change Game Freak's lines.
+            StringCopy(GF_ACCESS(TVShowFanClubLetter)->playerName, gSaveBlock2.playerName);
+            TERU_ACCESS(fanclubLetter).language = GAME_LANGUAGE;
+            break;
+        }
+        case TVSHOW_PKMN_FAN_CLUB_OPINIONS:
+        {
+            DECLARE_TERU_POINTER;
+            
+            GF_ACCESS(TVShowFanclubOpinions)->var02 = 1;
+            StringCopy(GF_ACCESS(TVShowFanclubOpinions)->playerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowFanclubOpinions)->var10);
+            TERU_ACCESS(fanclubOpinions).language = GAME_LANGUAGE;
+            TERU_ACCESS(fanclubOpinions).var0E = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
+            break;
+        }
+        case TVSHOW_UNKN_SHOWTYPE_04:
+        {
+            break;
+        }
+        case TVSHOW_NAME_RATER_SHOW:
+        {
+            u16 species = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_SPECIES);
+            DECLARE_TERU_POINTER;
+            
+            GF_ACCESS(TVShowNameRaterShow)->species = species;
+            GF_ACCESS(TVShowNameRaterShow)->var1C = 1;
+            StringCopy(GF_ACCESS(TVShowNameRaterShow)->trainerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowNameRaterShow)->pokemonName);
+            TERU_ACCESS(nameRaterShow).language = GAME_LANGUAGE;
+            TERU_ACCESS(nameRaterShow).pokemonNameLanguage = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
+            break;
+        }
+        case TVSHOW_BRAVO_TRAINER_POKEMON_PROFILE:
+        {
+            DECLARE_TERU_POINTER;
+            
+            GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->species = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->playerName, gSaveBlock2.playerName);
+            GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_NICKNAME, GF_ACCESS(TVShowBravoTrainerPokemonProfiles)->pokemonNickname);
+            TERU_ACCESS(bravoTrainer).language = GAME_LANGUAGE;
+            TERU_ACCESS(bravoTrainer).var1f = GetMonData(&gPlayerParty[leadMonIndex], MON_DATA_LANGUAGE);
+            break;
+        }
+        case TVSHOW_BRAVO_TRAINER_BATTLE_TOWER_PROFILE:
+        {
+            DECLARE_TERU_POINTER;
+            
+            GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->species = SPECIES_BULBASAUR;
+            GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->defeatedSpecies = SPECIES_BULBASAUR;
+            StringCopy(GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->trainerName, gSaveBlock2.playerName);
+            StringCopy(GF_ACCESS(TVShowBravoTrainerBattleTowerSpotlight)->enemyTrainerName, gSaveBlock2.playerName);
+            TERU_ACCESS(bravoTrainerTower).language = GAME_LANGUAGE;
+            break;
+        }
+        case TVSHOW_MASS_OUTBREAK:
+        {
+            GF_ACCESS(TVShowMassOutbreak)->species = SPECIES_BULBASAUR;
+            GF_ACCESS(TVShowMassOutbreak)->daysLeft = 1;
+            break;
+        }
+        case TVSHOW_POKEMON_TODAY_CAUGHT:
+        {
+            DECLARE_TERU_POINTER;
+            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
+            u8 gUnknown_Debug_083C4C6C[] = _("TERUTERUDA");
+
+            TERU_ACCESS(pokemonToday).var12 = 255;
+            StringCopy(TERU_ACCESS(pokemonToday).playerName, gUnknown_Debug_083C4C64);
+            StringCopy(TERU_ACCESS(pokemonToday).nickname, gUnknown_Debug_083C4C6C);
+            TERU_ACCESS(pokemonToday).ball = ITEM_PREMIER_BALL;
+            TERU_ACCESS(pokemonToday).species = SPECIES_WIGGLYTUFF;
+            TERU_ACCESS(pokemonToday).language = GAME_LANGUAGE;
+            TERU_ACCESS(pokemonToday).language2 = GAME_LANGUAGE;
+            break;
+        }
+        case TVSHOW_SMART_SHOPPER:
+        {
+            DECLARE_TERU_POINTER;
+            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
+            int ii;
+
+            for (ii = 0; ii < 3; ii++)
+                TERU_ACCESS(smartshopperShow).itemAmounts[ii] = 254;
+            TERU_ACCESS(smartshopperShow).priceReduced = TRUE;
+            TERU_ACCESS(smartshopperShow).shopLocation = 40;
+            for (ii = 0; ii < 3; ii++)
+                TERU_ACCESS(smartshopperShow).itemIds[ii] = ITEM_ENERGY_POWDER;
+            StringCopy(TERU_ACCESS(smartshopperShow).playerName, gUnknown_Debug_083C4C64);
+            TERU_ACCESS(smartshopperShow).language = GAME_LANGUAGE;
+            break;
+        }
+        case TVSHOW_POKEMON_TODAY_FAILED:
+        {
+            DECLARE_TERU_POINTER;
+            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
+
+            TERU_ACCESS(pokemonTodayFailed).species = SPECIES_WIGGLYTUFF;
+            TERU_ACCESS(pokemonTodayFailed).species2 = SPECIES_WIGGLYTUFF;
+            TERU_ACCESS(pokemonTodayFailed).var12 = 3;
+            TERU_ACCESS(pokemonTodayFailed).var10 = 0xff;
+            TERU_ACCESS(pokemonTodayFailed).var11 = 1;
+            StringCopy(TERU_ACCESS(pokemonTodayFailed).playerName, gUnknown_Debug_083C4C64);
+            TERU_ACCESS(pokemonTodayFailed).language = GAME_LANGUAGE;
+            break;
+        }
+        case TVSHOW_FISHING_ADVICE:
+        {
+            DECLARE_TERU_POINTER;
+            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
+
+            TERU_ACCESS(pokemonAngler).var02 = 0xff;
+            TERU_ACCESS(pokemonAngler).var03 = 0;
+            TERU_ACCESS(pokemonAngler).var04 = 40;
+            StringCopy(TERU_ACCESS(pokemonAngler).playerName, gUnknown_Debug_083C4C64);
+            TERU_ACCESS(pokemonAngler).language = GAME_LANGUAGE;
+            break;
+        }
+        case TVSHOW_WORLD_OF_MASTERS:
+        {
+            DECLARE_TERU_POINTER;
+            u8 gUnknown_Debug_083C4C64[] = _("TERUKUN");
+
+            TERU_ACCESS(worldOfMasters).var02 = 0xffff;
+            TERU_ACCESS(worldOfMasters).var06 = 0xffff;
+            TERU_ACCESS(worldOfMasters).var04 = 40;
+            TERU_ACCESS(worldOfMasters).var08 = 40;
+            TERU_ACCESS(worldOfMasters).var0a = 3;
+            StringCopy(TERU_ACCESS(worldOfMasters).playerName, gUnknown_Debug_083C4C64);
+            TERU_ACCESS(worldOfMasters).language = GAME_LANGUAGE;
+            break;
+        }
+    }
+#endif
 }
 
 bool8 debug_sub_808FEBC(void)
@@ -754,15 +865,18 @@ bool8 debug_sub_80900AC(void)
     CloseMenu();
     return TRUE;
 }
-
-const u8 gUnknown_Debug_083C4C77[] = _("1　スクル");
-const u8 gUnknown_Debug_083C4C7D[] = _("2　ミドル");
-const u8 gUnknown_Debug_083C4C83[] = _("3　オジヨ");
-const u8 gUnknown_Debug_083C4C89[] = _("4　ボーヤ");
-const u8 gUnknown_Debug_083C4C8F[] = _("5　ボーイ");
-const u8 gUnknown_Debug_083C4C95[] = _("6　ヤング");
-const u8 gUnknown_Debug_083C4C9B[] = _("7　ヲーカ");
-const u8 gUnknown_Debug_083C4CA1[] = _("8　オルド");
+// These represent the people in Lilycove Fan Club.
+// TRN: These translations are probably wrong but it is really hard to tell with
+// the abbreviations. They are mosly based on observation
+// The first one is selected by default when there are no fans.
+const u8 gUnknown_Debug_083C4C77[] = DTR("1　スクル", "1 LASS/NONE"); // school (girl)
+const u8 gUnknown_Debug_083C4C7D[] = DTR("2　ミドル", "2 MIDDLE AGE MAN"); // middle
+const u8 gUnknown_Debug_083C4C83[] = DTR("3　オジヨ", "3 DAUGHTER"); // おしょう (daughter)
+const u8 gUnknown_Debug_083C4C89[] = DTR("4　ボーヤ", "4 YOUNG BOY"); // 坊や (boy)
+const u8 gUnknown_Debug_083C4C8F[] = DTR("5　ボーイ", "5 BOY"); // boy
+const u8 gUnknown_Debug_083C4C95[] = DTR("6　ヤング", "6 YOUNG MAN"); // young
+const u8 gUnknown_Debug_083C4C9B[] = DTR("7　ヲーカ", "7 MOM"); // お母さん? (probably typo)
+const u8 gUnknown_Debug_083C4CA1[] = DTR("8　オルド", "8 OLD LADY"); // old
 
 const u8 *const gUnknown_Debug_083C4CA8[] = {
     gUnknown_Debug_083C4C77,
@@ -775,15 +889,15 @@ const u8 *const gUnknown_Debug_083C4CA8[] = {
     gUnknown_Debug_083C4CA1
 };
 
-const u8 gUnknown_Debug_083C4CC8[] = _("Start");
-const u8 gUnknown_Debug_083C4CCE[] = _("Increase");
-const u8 gUnknown_Debug_083C4CD7[] = _("Reduce");
+const u8 gUnknown_Debug_083C4CC8[] = _("Start"); // Starts the "Oh! I've heard of you' script"
+const u8 gUnknown_Debug_083C4CCE[] = _("Increase"); // Increases popularity
+const u8 gUnknown_Debug_083C4CD7[] = _("Reduce"); // reduces popularity
 const u8 gUnknown_Debug_083C4CDE[] = _("Points");
-const u8 gUnknown_Debug_083C4CE5[] = _("Play　time　6");
-const u8 gUnknown_Debug_083C4CF1[] = _("P　ELITE　FOUR");
-const u8 gUnknown_Debug_083C4CFE[] = _("P　SECRET　BASE");
-const u8 gUnknown_Debug_083C4D0C[] = _("P　CONTEST");
-const u8 gUnknown_Debug_083C4D16[] = _("P　BATTLE　TOWER");
+const u8 gUnknown_Debug_083C4CE5[] = _("Play time 6");
+const u8 gUnknown_Debug_083C4CF1[] = _("P ELITE FOUR");
+const u8 gUnknown_Debug_083C4CFE[] = _("P SECRET BASE");
+const u8 gUnknown_Debug_083C4D0C[] = _("P CONTEST");
+const u8 gUnknown_Debug_083C4D16[] = _("P BATTLE TOWER");
 
 const struct MenuAction gUnknown_Debug_083C4D28[] = {
     {gUnknown_Debug_083C4CC8, debug_sub_80901E4},
@@ -826,7 +940,7 @@ bool8 debug_sub_80901A4(void)
 bool8 debug_sub_80901E4(void)
 {
     ResetFanClub();
-    sub_810FAA0();
+    UpdateTrainerFanClubGameClear();
     CloseMenu();
     return TRUE;
 }

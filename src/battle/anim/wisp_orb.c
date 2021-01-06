@@ -6,8 +6,8 @@
 #include "trig.h"
 
 extern s16 gBattleAnimArgs[8];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 extern u16 gBattleTypeFlags;
 extern u8 gUnknown_0202F7D2;
 
@@ -72,7 +72,7 @@ void sub_80D5B0C(struct Sprite *sprite)
         StartSpriteAnim(sprite, gBattleAnimArgs[2]);
         sprite->data[7] = gBattleAnimArgs[2];
 
-        if (GetBattlerSide(gAnimBankAttacker) != 0)
+        if (GetBattlerSide(gBattleAnimAttacker) != 0)
         {
             sprite->data[4] = 4;
         }
@@ -81,12 +81,12 @@ void sub_80D5B0C(struct Sprite *sprite)
             sprite->data[4] = -4;
         }
 
-        sprite->oam.priority = sub_8079ED4(gAnimBankTarget);
+        sprite->oam.priority = GetBattlerSpriteBGPriority(gBattleAnimTarget);
         sprite->data[0]++;
         break;
     case 1:
         sprite->data[1] += 192;
-        if (GetBattlerSide(gAnimBankAttacker) != 0)
+        if (GetBattlerSide(gBattleAnimAttacker) != 0)
         {
             sprite->pos2.y = -(sprite->data[1] >> 8);
         }
@@ -117,9 +117,9 @@ void sub_80D5B0C(struct Sprite *sprite)
 
             sprite->data[0] = 256;
             sprite->data[1] = sprite->pos1.x;
-            sprite->data[2] = GetBattlerSpriteCoord(gAnimBankTarget, 2);
+            sprite->data[2] = GetBattlerSpriteCoord(gBattleAnimTarget, 2);
             sprite->data[3] = sprite->pos1.y;
-            sprite->data[4] = GetBattlerSpriteCoord(gAnimBankTarget, 3);
+            sprite->data[4] = GetBattlerSpriteCoord(gBattleAnimTarget, 3);
 
             sub_8078BD4(sprite);
             sprite->callback = sub_80D5C5C;
@@ -142,7 +142,7 @@ static void sub_80D5C5C(struct Sprite *sprite)
 
         if ((initialData5 == 0 || initialData5 > 196) && newData5 > 0 && sprite->data[7] == 0)
         {
-            PlaySE12WithPanning(SE_W172, gUnknown_0202F7D2);
+            PlaySE12WithPanning(SE_M_FLAME_WHEEL, gUnknown_0202F7D2);
         }
     }
     else

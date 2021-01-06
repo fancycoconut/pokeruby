@@ -5,8 +5,8 @@
 #include "sound.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 
 static void sub_80D0A8C(u8 taskId);
 static void sub_80D0B3C(u8 taskId);
@@ -31,14 +31,14 @@ void sub_80D0A4C(u8 taskId)
     u8 spriteId = GetAnimBattlerSpriteId(0);
     task->data[0] = spriteId;
     task->data[1] = 0;
-    sub_80798F4(task, spriteId, &gSpriteAffineAnim_83D77B0);
+    PrepareAffineAnimInTaskData(task, spriteId, &gSpriteAffineAnim_83D77B0);
     task->func = sub_80D0A8C;
 }
 
 static void sub_80D0A8C(u8 taskId)
 {
     struct Task* task = &gTasks[taskId];
-    if (!sub_807992C(task))
+    if (!RunAffineAnimFromTaskData(task))
         DestroyAnimVisualTask(taskId);
 }
 
@@ -56,7 +56,7 @@ void sub_80D0AB8(u8 taskId)
     task->data[7] = 0;
     task->data[8] = 0;
     task->data[9] = 2;
-    if (GetBattlerSide(gAnimBankAttacker) == 1)
+    if (GetBattlerSide(gBattleAnimAttacker) == 1)
         task->data[2] *= -1;
 
     task->func = sub_80D0B3C;

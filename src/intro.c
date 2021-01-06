@@ -1046,7 +1046,7 @@ static void Task_IntroScrollDownAndShowEon(u8 taskId)
         {
             u8 spriteId = CreateSprite(&gSpriteTemplate_840AFF0, 200, 160, 10);
 
-            gSprites[spriteId].invisible = 1;
+            gSprites[spriteId].invisible = TRUE;
         }
     }
     else
@@ -1403,10 +1403,10 @@ static void Task_IntroPokemonBattle(u8 taskId)
         gSprites[gTasks[taskId].data[4]].data[0] = 3;
         gSprites[gTasks[taskId].data[5]].data[0] = 3;
         spriteId = CreateSprite(&gSpriteTemplate_840B1F4, 0x78, 0x50, 15);
-        gSprites[spriteId].invisible = 1;
+        gSprites[spriteId].invisible = TRUE;
     }
     if (gIntroFrameCounter == 800)
-        PlaySE(SE_OP_BASYU);
+        PlaySE(SE_INTRO_BLAST);
     if (gIntroFrameCounter == 850)
         BeginNormalPaletteFade(0xFFFFFFFF, 4, 0, 16, FADE_COLOR_WHITE);
     if (gIntroFrameCounter == 946)
@@ -1601,9 +1601,9 @@ static u16 sub_813CE88(u16 species, s16 x, s16 y, u16 d, u8 front)
     u8 spriteId;
 
     if (front)
-        LoadSpecialPokePic(&gMonFrontPicTable[species], gMonFrontPicCoords[species].coords, gMonFrontPicCoords[species].y_offset, 0x2000000, gUnknown_0840B5A0[d], species, 0, 1);
+        LoadSpecialPokePic(&gMonFrontPicTable[species], gMonFrontPicCoords[species].coords, gMonFrontPicCoords[species].y_offset, EWRAM, gUnknown_0840B5A0[d], species, 0, 1);
     else
-        LoadSpecialPokePic(&gMonBackPicTable[species], gMonBackPicCoords[species].coords, gMonBackPicCoords[species].y_offset, 0x2000000, gUnknown_0840B5A0[d], species, 0, 0);
+        LoadSpecialPokePic(&gMonBackPicTable[species], gMonBackPicCoords[species].coords, gMonBackPicCoords[species].y_offset, EWRAM, gUnknown_0840B5A0[d], species, 0, 0);
     lzPaletteData = GetMonSpritePalFromOtIdPersonality(species, 0, 0xFFFF);
     LoadCompressedPalette(lzPaletteData, 0x100 + d * 0x10, 0x20);
     sub_8143648(d, d);
@@ -1617,7 +1617,7 @@ static u8 sub_813CFA8(u16 a, u16 b, u16 c, u16 d)
 {
     u8 spriteId;
 
-    DecompressPicFromTable_2(&gTrainerBackPicTable[a], gTrainerBackPicCoords[a].coords, gTrainerBackPicCoords[a].y_offset, (void *)0x2000000, gUnknown_0840B5A0[d], a);
+    DecompressPicFromTable_2(&gTrainerBackPicTable[a], gTrainerBackPicCoords[a].coords, gTrainerBackPicCoords[a].y_offset, (void *)EWRAM, gUnknown_0840B5A0[d], a);
     LoadCompressedPalette(gTrainerBackPicPaletteTable[a].data, 0x100 + d * 0x10, 0x20);
     sub_8143680(d, d);
     gUnknown_02024E8C.anims = gUnknown_0840B064;
@@ -2207,7 +2207,7 @@ static void sub_813DE70(struct Sprite *sprite)
     case 3:
         if (sprite->pos1.y > 160)
         {
-            sprite->invisible = 1;
+            sprite->invisible = TRUE;
             sprite->data[0] = 1;
         }
         else

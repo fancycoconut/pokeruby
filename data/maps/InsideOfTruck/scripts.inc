@@ -1,12 +1,12 @@
 InsideOfTruck_MapScripts:: @ 815FBFF
-	map_script 1, InsideOfTruck_MapScript1_15FC0A
-	map_script 5, InsideOfTruck_MapScript1_15FC26
+	map_script MAP_SCRIPT_ON_LOAD, InsideOfTruck_MapScript1_15FC0A
+	map_script MAP_SCRIPT_ON_RESUME, InsideOfTruck_MapScript1_15FC26
 	.byte 0
 
 InsideOfTruck_MapScript1_15FC0A:: @ 815FC0A
-	setmetatile 4, 1, 520, 0
-	setmetatile 4, 2, 528, 0
-	setmetatile 4, 3, 536, 0
+	setmetatile 4, 1, METATILE_InsideOfTruck_ExitLight_Top, 0
+	setmetatile 4, 2, METATILE_InsideOfTruck_ExitLight_Mid, 0
+	setmetatile 4, 3, METATILE_InsideOfTruck_ExitLight_Bottom, 0
 	end
 
 InsideOfTruck_MapScript1_15FC26:: @ 815FC26
@@ -15,11 +15,11 @@ InsideOfTruck_MapScript1_15FC26:: @ 815FC26
 
 InsideOfTruck_EventScript_15FC29:: @ 815FC29
 	lockall
-	setflag FLAG_SPECIAL_FLAG_0
+	setflag FLAG_HIDE_MAP_NAME_POPUP
 	checkplayergender
-	compare RESULT, 0
+	compare VAR_RESULT, 0
 	goto_if_eq InsideOfTruck_EventScript_15FC45
-	compare RESULT, 1
+	compare VAR_RESULT, 1
 	goto_if_eq InsideOfTruck_EventScript_15FC68
 	end
 
@@ -48,5 +48,5 @@ InsideOfTruck_EventScript_15FC68:: @ 815FC68
 	end
 
 InsideOfTruck_EventScript_15FC8B:: @ 815FC8B
-	msgbox InsideOfTruck_Text_198FAD, 3
+	msgbox InsideOfTruck_Text_198FAD, MSGBOX_SIGN
 	end

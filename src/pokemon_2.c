@@ -26,8 +26,8 @@ extern u8 gActiveBattler;
 extern struct BattlePokemon gBattleMons[4];
 extern u16 gCurrentMove;
 extern u8 gLastUsedAbility;
-extern u8 gBankAttacker;
-extern u8 gBankTarget;
+extern u8 gBattlerAttacker;
+extern u8 gBattlerTarget;
 extern u8 gAbsentBattlerFlags;
 extern u8 gXXX_CritRelated;
 extern u16 gBattleWeather;
@@ -67,14 +67,14 @@ u8 CountAliveMons(u8 a1)
     case 1:
         for (i = 0; i < 4; i++)
         {
-            if (GetBattlerSide(i) == GetBattlerSide(gBankAttacker) && !(gAbsentBattlerFlags & gBitTable[i]))
+            if (GetBattlerSide(i) == GetBattlerSide(gBattlerAttacker) && !(gAbsentBattlerFlags & gBitTable[i]))
                 retVal++;
         }
         break;
     case 2:
         for (i = 0; i < 4; i++)
         {
-            if (GetBattlerSide(i) == GetBattlerSide(gBankTarget) && !(gAbsentBattlerFlags & gBitTable[i]))
+            if (GetBattlerSide(i) == GetBattlerSide(gBattlerTarget) && !(gAbsentBattlerFlags & gBitTable[i]))
                 retVal++;
         }
         break;
@@ -1031,14 +1031,14 @@ u8 CalculateEnemyPartyCount(void)
     return gEnemyPartyCount;
 }
 
-u8 sub_803DAA0(void)
+u8 GetMonsStateToDoubles(void)
 {
     s32 aliveCount = 0;
     s32 i;
     CalculatePlayerPartyCount();
 
     if (gPlayerPartyCount == 1)
-        return gPlayerPartyCount;
+        return gPlayerPartyCount; // PLAYER_HAS_ONE_MON
 
     for (i = 0; i < gPlayerPartyCount; i++)
     {
@@ -1048,7 +1048,7 @@ u8 sub_803DAA0(void)
             aliveCount++;
     }
 
-    return (aliveCount > 1) ? 0 : 2;
+    return (aliveCount > 1) ? PLAYER_HAS_TWO_USABLE_MONS : PLAYER_HAS_ONE_USABLE_MON;
 }
 
 u8 GetAbilityBySpecies(u16 species, bool8 altAbility)

@@ -6,10 +6,10 @@
 #include "sound.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 extern u8 gBattlersCount;
-extern u8 gHealthboxIDs[];
+extern u8 gHealthboxSpriteIds[];
 
 void sub_80CE09C(struct Sprite* sprite);
 void sub_80CE17C(struct Sprite* sprite);
@@ -120,8 +120,8 @@ void sub_80CE09C(struct Sprite* sprite)
 {
     if (sprite->data[0] == 0)
     {
-        sprite->pos1.x = GetBattlerSpriteCoord(gAnimBankAttacker, 0) + gBattleAnimArgs[0];
-        sprite->pos1.y = GetBattlerSpriteCoord(gAnimBankAttacker, 1) + gBattleAnimArgs[1];
+        sprite->pos1.x = GetBattlerSpriteCoord(gBattleAnimAttacker, 0) + gBattleAnimArgs[0];
+        sprite->pos1.y = GetBattlerSpriteCoord(gBattleAnimAttacker, 1) + gBattleAnimArgs[1];
         if (IsContest())
             sprite->pos1.y += 10;
         sprite->data[0]++;
@@ -173,8 +173,8 @@ static void sub_80CE1AC(struct Sprite* sprite)
     {
         sprite->animPaused = 0;
         sprite->data[0] = 30;
-        sprite->data[2] = GetBattlerSpriteCoord(gAnimBankAttacker, 2);
-        sprite->data[4] = GetBattlerSpriteCoord(gAnimBankAttacker, 3);
+        sprite->data[2] = GetBattlerSpriteCoord(gBattleAnimAttacker, 2);
+        sprite->data[4] = GetBattlerSpriteCoord(gBattleAnimAttacker, 3);
         sprite->callback = StartAnimLinearTranslation;
         StoreSpriteCallbackInData(sprite, DestroyAnimSprite);
     }
@@ -198,10 +198,10 @@ void unref_sub_80CE260(u8 taskId)
     for (i = 0; i < gBattlersCount; i++)
     {
         if (gBattleAnimArgs[0] == 1 && GetBattlerSide(i) == 0)
-            sub_8043DB0(gHealthboxIDs[i]);
+            sub_8043DB0(gHealthboxSpriteIds[i]);
 
         if (gBattleAnimArgs[1] == 1 && GetBattlerSide(i) == 1)
-            sub_8043DB0(gHealthboxIDs[i]);
+            sub_8043DB0(gHealthboxSpriteIds[i]);
     }
 
     DestroyAnimVisualTask(taskId);
@@ -212,7 +212,7 @@ void unref_sub_80CE2D4(u8 taskId)
     u8 i;
     for (i = 0; i < gBattlersCount; i++)
     {
-        sub_8043DFC(gHealthboxIDs[i]);
+        sub_8043DFC(gHealthboxSpriteIds[i]);
     }
 
     DestroyAnimVisualTask(taskId);

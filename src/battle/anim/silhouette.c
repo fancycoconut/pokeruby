@@ -4,8 +4,8 @@
 #include "battle_anim.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 
 static void sub_80CB3A8(u8 taskId);
 static void sub_80CB438(u8 taskId);
@@ -22,7 +22,7 @@ void sub_80CB340(u8 taskId)
     }
     else
     {
-        sub_8078E70(spriteId, 1);
+        PrepareBattlerSpriteForRotScale(spriteId, 1);
         gTasks[taskId].data[0] = gBattleAnimArgs[0];
         gTasks[taskId].data[1] = gBattleAnimArgs[1];
         gTasks[taskId].data[11] = 256;
@@ -35,7 +35,7 @@ void sub_80CB3A8(u8 taskId)
     u8 spriteId = GetAnimBattlerSpriteId(1);
     gTasks[taskId].data[10] += gTasks[taskId].data[0];
     gSprites[spriteId].pos2.x = gTasks[taskId].data[10] >> 8;
-    if (GetBattlerSide(gAnimBankTarget))
+    if (GetBattlerSide(gBattleAnimTarget))
     {
         gSprites[spriteId].pos2.x = -gSprites[spriteId].pos2.x;
     }

@@ -1,5 +1,5 @@
 SkyPillar_Top_MapScripts:: @ 815F302
-	map_script 5, SkyPillar_Top_MapScript1_15F308
+	map_script MAP_SCRIPT_ON_RESUME, SkyPillar_Top_MapScript1_15F308
 	.byte 0
 
 SkyPillar_Top_MapScript1_15F308:: @ 815F308
@@ -7,7 +7,7 @@ SkyPillar_Top_MapScript1_15F308:: @ 815F308
 	end
 
 SkyPillar_Top_EventScript_15F312:: @ 815F312
-	removeobject LAST_TALKED
+	removeobject VAR_LAST_TALKED
 	return
 
 SkyPillar_Top_EventScript_15F316:: @ 815F316

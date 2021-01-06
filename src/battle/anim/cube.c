@@ -6,8 +6,8 @@
 #include "constants/songs.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 
 void sub_80CDFB0(struct Sprite* sprite);
 static void sub_80CE000(struct Sprite* sprite);
@@ -52,8 +52,8 @@ const struct SpriteTemplate gBattleAnimSpriteTemplate_83D6EF0 =
 
 void sub_80CDFB0(struct Sprite* sprite)
 {
-    sprite->pos1.x = GetBattlerSpriteCoord(gAnimBankAttacker, 2);
-    sprite->pos1.y = GetBattlerSpriteCoord(gAnimBankAttacker, 3) - 12;
+    sprite->pos1.x = GetBattlerSpriteCoord(gBattleAnimAttacker, 2);
+    sprite->pos1.y = GetBattlerSpriteCoord(gBattleAnimAttacker, 3) - 12;
     sprite->data[0] = 0;
     sprite->data[1] = 2;
     sprite->data[2] = 0;
@@ -72,7 +72,7 @@ static void sub_80CE000(struct Sprite* sprite)
         {
             sprite->data[4]++;
             if (!(sprite->data[4] & 1))
-                PlaySE12WithPanning(SE_W207B, sprite->data[5]);
+                PlaySE12WithPanning(SE_M_SWAGGER2, sprite->data[5]);
         }
 
         sprite->data[0] = 0;

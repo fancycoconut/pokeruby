@@ -10,8 +10,8 @@
 #include "constants/songs.h"
 
 extern s16 gBattleAnimArgs[];
-extern u8 gAnimBankAttacker;
-extern u8 gAnimBankTarget;
+extern u8 gBattleAnimAttacker;
+extern u8 gBattleAnimTarget;
 extern s32 gAnimMoveDmg;
 extern u16 gBattle_BG1_X;
 extern u16 gBattle_BG1_Y;
@@ -321,7 +321,7 @@ const struct SpriteTemplate gBattleAnimSpriteTemplate_83DAE30 =
 void sub_80DCE9C(struct Sprite *sprite)
 {
     if (gBattleAnimArgs[3] != 0)
-        SetAverageBattlerPositions(gAnimBankTarget, 0, &sprite->pos1.x, &sprite->pos1.y);
+        SetAverageBattlerPositions(gBattleAnimTarget, 0, &sprite->pos1.x, &sprite->pos1.y);
 
     sprite->pos1.x += gBattleAnimArgs[0];
     sprite->pos1.y += 14;
@@ -351,7 +351,7 @@ static void sub_80DCF1C(struct Sprite *sprite)
     sprite->data[3] = 32;
     sprite->data[4] = -24;
 
-    StoreSpriteCallbackInData(sprite, move_anim_8074EE0);
+    StoreSpriteCallbackInData(sprite, DestroySpriteAndMatrix);
     sprite->callback = sub_8078278;
     sprite->callback(sprite);
 }
@@ -361,7 +361,7 @@ void sub_80DCF60(struct Sprite *sprite)
     StartSpriteAnim(sprite, gBattleAnimArgs[5]);
     AnimateSprite(sprite);
 
-    if (GetBattlerSide(gAnimBankAttacker) != B_SIDE_PLAYER)
+    if (GetBattlerSide(gBattleAnimAttacker) != B_SIDE_PLAYER)
         sprite->pos1.x -= gBattleAnimArgs[0];
     else
         sprite->pos1.x += gBattleAnimArgs[0];
@@ -379,7 +379,7 @@ void sub_80DCF60(struct Sprite *sprite)
     sprite->data[4] = 0;
 
     sprite->callback = sub_8078394;
-    StoreSpriteCallbackInData(sprite, move_anim_8074EE0);
+    StoreSpriteCallbackInData(sprite, DestroySpriteAndMatrix);
 }
 
 void sub_80DCFE4(struct Sprite *sprite)
@@ -437,7 +437,7 @@ void do_boulder_dust(u8 taskId)
     if (IsContest())
         sub_80763FC(subStruct.field_8, (u16 *)subStruct.field_4, 0, 0);
 
-    if (gBattleAnimArgs[0] != 0 && GetBattlerSide(gAnimBankAttacker) != B_SIDE_PLAYER)
+    if (gBattleAnimArgs[0] != 0 && GetBattlerSide(gBattleAnimAttacker) != B_SIDE_PLAYER)
         var0 = 1;
 
     gTasks[taskId].data[0] = var0;
@@ -520,7 +520,7 @@ void AnimDirtParticleAcrossScreen(struct Sprite *sprite)
 {
     if (sprite->data[0] == 0)
     {
-        if (gBattleAnimArgs[3] != 0 && GetBattlerSide(gAnimBankAttacker) != B_SIDE_PLAYER)
+        if (gBattleAnimArgs[3] != 0 && GetBattlerSide(gBattleAnimAttacker) != B_SIDE_PLAYER)
         {
             sprite->pos1.x = 304;
             gBattleAnimArgs[1] = -gBattleAnimArgs[1];
@@ -590,12 +590,12 @@ void sub_80DD4D4(u8 taskId)
 
     task = &gTasks[taskId];
 
-    var0 = GetBattlerSpriteCoord(gAnimBankAttacker, 2);
-    var1 = GetBattlerSpriteCoord(gAnimBankAttacker, 1) + 24;
-    var2 = GetBattlerSpriteCoord(gAnimBankTarget, 2);
-    var3 = GetBattlerSpriteCoord(gAnimBankTarget, 1) + 24;
+    var0 = GetBattlerSpriteCoord(gBattleAnimAttacker, 2);
+    var1 = GetBattlerSpriteCoord(gBattleAnimAttacker, 1) + 24;
+    var2 = GetBattlerSpriteCoord(gBattleAnimTarget, 2);
+    var3 = GetBattlerSpriteCoord(gBattleAnimTarget, 1) + 24;
 
-    if ((gAnimBankAttacker ^ 2) == gAnimBankTarget)
+    if ((gBattleAnimAttacker ^ 2) == gBattleAnimTarget)
         var3 = var1;
 
     var4 = sub_80DD8BC();
@@ -653,7 +653,7 @@ static void sub_80DD604(u8 taskId)
             task->data[0]++;
         }
 
-        PlaySE12WithPanning(SE_W029, task->data[13]);
+        PlaySE12WithPanning(SE_M_HEADBUTT, task->data[13]);
         break;
     case 1:
         if (--task->data[11] == 0)
@@ -683,7 +683,7 @@ static void sub_80DD604(u8 taskId)
             task->data[9] = 0;
             sub_80DD774(task);
             task->data[13] += task->data[14];
-            PlaySE12WithPanning(SE_W091, task->data[13]);
+            PlaySE12WithPanning(SE_M_DIG, task->data[13]);
         }
 
         if (--task->data[8] == 0)
@@ -782,12 +782,12 @@ void sub_80DD8E8(struct Sprite *sprite)
     sprite->data[0] = 3;
     sprite->data[1] = gBattleAnimArgs[3];
     sprite->callback = sub_80DD928;
-    sprite->invisible = 1;
+    sprite->invisible = TRUE;
 }
 
 static void sub_80DD928(struct Sprite *sprite)
 {
-    sprite->invisible = 0;
+    sprite->invisible = FALSE;
     if (sprite->data[3] != 0)
     {
         sprite->pos2.y = sprite->data[2] + sprite->data[3];
@@ -809,7 +809,7 @@ static void sub_80DD928(struct Sprite *sprite)
 
 void sub_80DD978(struct Sprite *sprite)
 {
-    if (GetBattlerSide(gAnimBankAttacker) == B_SIDE_OPPONENT)
+    if (GetBattlerSide(gBattleAnimAttacker) == B_SIDE_OPPONENT)
         StartSpriteAffineAnim(sprite, 1);
 
     TranslateAnimSpriteToTargetMonLocation(sprite);
@@ -817,8 +817,8 @@ void sub_80DD978(struct Sprite *sprite)
 
 void sub_80DD9A4(struct Sprite *sprite)
 {
-    sprite->pos1.x = GetBattlerSpriteCoord(gAnimBankTarget, 0);
-    sprite->pos1.y = GetBattlerSpriteCoord(gAnimBankTarget, 1);
+    sprite->pos1.x = GetBattlerSpriteCoord(gBattleAnimTarget, 0);
+    sprite->pos1.y = GetBattlerSpriteCoord(gBattleAnimTarget, 1);
     sprite->pos1.x += gBattleAnimArgs[0];
     sprite->pos1.y += gBattleAnimArgs[1];
 

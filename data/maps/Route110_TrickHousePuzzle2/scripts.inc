@@ -1,6 +1,6 @@
 Route110_TrickHousePuzzle2_MapScripts:: @ 8161D76
-	map_script 5, Route110_TrickHousePuzzle2_MapScript1_161D81
-	map_script 3, Route110_TrickHousePuzzle2_MapScript1_161DAE
+	map_script MAP_SCRIPT_ON_RESUME, Route110_TrickHousePuzzle2_MapScript1_161D81
+	map_script MAP_SCRIPT_ON_TRANSITION, Route110_TrickHousePuzzle2_MapScript1_161DAE
 	.byte 0
 
 Route110_TrickHousePuzzle2_MapScript1_161D81:: @ 8161D81
@@ -70,36 +70,36 @@ Route110_TrickHousePuzzle2_EventScript_161E19:: @ 8161E19
 	end
 
 Route110_TrickHousePuzzle2_EventScript_161E2C:: @ 8161E2C
-	setmetatile 14, 21, 601, 0
-	setmetatile 1, 12, 618, 0
+	setmetatile 14, 21, METATILE_TrickHousePuzzle_Button_Pressed, 0
+	setmetatile 1, 12, METATILE_TrickHousePuzzle_Door_Shuttered, 0
 	return
 
 Route110_TrickHousePuzzle2_EventScript_161E3F:: @ 8161E3F
-	setmetatile 8, 17, 601, 0
-	setmetatile 12, 13, 618, 0
+	setmetatile 8, 17, METATILE_TrickHousePuzzle_Button_Pressed, 0
+	setmetatile 12, 13, METATILE_TrickHousePuzzle_Door_Shuttered, 0
 	return
 
 Route110_TrickHousePuzzle2_EventScript_161E52:: @ 8161E52
-	setmetatile 4, 10, 601, 0
-	setmetatile 8, 4, 618, 0
+	setmetatile 4, 10, METATILE_TrickHousePuzzle_Button_Pressed, 0
+	setmetatile 8, 4, METATILE_TrickHousePuzzle_Door_Shuttered, 0
 	return
 
 Route110_TrickHousePuzzle2_EventScript_161E65:: @ 8161E65
-	setmetatile 5, 2, 601, 0
-	setmetatile 12, 5, 618, 0
+	setmetatile 5, 2, METATILE_TrickHousePuzzle_Button_Pressed, 0
+	setmetatile 12, 5, METATILE_TrickHousePuzzle_Door_Shuttered, 0
 	return
 
 Route110_TrickHousePuzzle2_EventScript_161E78:: @ 8161E78
-	trainerbattle 0, TRAINER_TED, 0, Route110_TrickHousePuzzle2_Text_19CD46, Route110_TrickHousePuzzle2_Text_19CD66
-	msgbox Route110_TrickHousePuzzle2_Text_19CD91, 6
+	trainerbattle_single TRAINER_TED, Route110_TrickHousePuzzle2_Text_19CD46, Route110_TrickHousePuzzle2_Text_19CD66
+	msgbox Route110_TrickHousePuzzle2_Text_19CD91, MSGBOX_AUTOCLOSE
 	end
 
 Route110_TrickHousePuzzle2_EventScript_161E8F:: @ 8161E8F
-	trainerbattle 0, TRAINER_PAUL, 0, Route110_TrickHousePuzzle2_Text_19CDBF, Route110_TrickHousePuzzle2_Text_19CDF0
-	msgbox Route110_TrickHousePuzzle2_Text_19CE0D, 6
+	trainerbattle_single TRAINER_PAUL, Route110_TrickHousePuzzle2_Text_19CDBF, Route110_TrickHousePuzzle2_Text_19CDF0
+	msgbox Route110_TrickHousePuzzle2_Text_19CE0D, MSGBOX_AUTOCLOSE
 	end
 
 Route110_TrickHousePuzzle2_EventScript_161EA6:: @ 8161EA6
-	trainerbattle 0, TRAINER_GEORGIA, 0, Route110_TrickHousePuzzle2_Text_19CE52, Route110_TrickHousePuzzle2_Text_19CE98
-	msgbox Route110_TrickHousePuzzle2_Text_19CEB8, 6
+	trainerbattle_single TRAINER_GEORGIA, Route110_TrickHousePuzzle2_Text_19CE52, Route110_TrickHousePuzzle2_Text_19CE98
+	msgbox Route110_TrickHousePuzzle2_Text_19CEB8, MSGBOX_AUTOCLOSE
 	end

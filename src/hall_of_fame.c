@@ -27,7 +27,7 @@ static EWRAM_DATA u32 sUnknown_0203931C = 0;
 
 extern bool8 gUnknown_02039324; // has hall of fame records
 extern void (*gGameContinueCallback)(void);
-extern struct MusicPlayerInfo gMPlay_BGM;
+extern struct MusicPlayerInfo gMPlayInfo_BGM;
 extern u8 gReservedSpritePaletteCount;
 extern struct SpriteTemplate gUnknown_02024E8C;
 
@@ -451,7 +451,7 @@ static bool8 sub_8141E64(void)
         if (!gPaletteFade.active)
         {
             SetMainCallback2(CB2_HallOfFame);
-            PlayBGM(MUS_DENDOU);
+            PlayBGM(MUS_HALL_OF_FAME);
             return 0;
         }
         break;
@@ -666,7 +666,7 @@ static void sub_8142570(u8 taskID)
     }
     Menu_EraseWindowRect(0, 14, 29, 19);
     sub_8143068(0, 15);
-    PlaySE(SE_DENDOU);
+    PlaySE(SE_APPLAUSE);
     gTasks[taskID].tFrameCount = 400;
     gTasks[taskID].func = sub_8142618;
 }
@@ -983,7 +983,7 @@ static void sub_8142DF4(u8 taskID)
             if (IsCryPlayingOrClearCrySongs())
             {
                 StopCryAndClearCrySongs();
-                m4aMPlayVolumeControl(&gMPlay_BGM, 0xFFFF, 0x100);
+                m4aMPlayVolumeControl(&gMPlayInfo_BGM, 0xFFFF, 0x100);
             }
             gTasks[taskID].func = sub_8142F78;
         }
@@ -993,7 +993,7 @@ static void sub_8142DF4(u8 taskID)
         if (IsCryPlayingOrClearCrySongs())
         {
             StopCryAndClearCrySongs();
-            m4aMPlayVolumeControl(&gMPlay_BGM, 0xFFFF, 0x100);
+            m4aMPlayVolumeControl(&gMPlayInfo_BGM, 0xFFFF, 0x100);
         }
         gTasks[taskID].func = sub_8142F78;
     }
@@ -1298,7 +1298,7 @@ static u32 HallOfFame_LoadPokemonPic(u16 species, s16 posX, s16 posY, u16 pokeID
     u8 spriteID;
     const u8* pokePal;
 
-    LoadSpecialPokePic(&gMonFrontPicTable[species], gMonFrontPicCoords[species].coords, gMonFrontPicCoords[species].y_offset, 0x2000000, gUnknown_0840B5A0[pokeID], species, pid, 1);
+    LoadSpecialPokePic(&gMonFrontPicTable[species], gMonFrontPicCoords[species].coords, gMonFrontPicCoords[species].y_offset, EWRAM, gUnknown_0840B5A0[pokeID], species, pid, 1);
 
     pokePal = GetMonSpritePalFromOtIdPersonality(species, tid, pid);
     LoadCompressedPalette(pokePal, 16 * pokeID + 256, 0x20);
@@ -1313,7 +1313,7 @@ static u32 HallOfFame_LoadTrainerPic(u16 trainerPicID, s16 posX, s16 posY, u16 a
 {
     u8 spriteID;
 
-    DecompressPicFromTable_2(&gTrainerFrontPicTable[trainerPicID], gTrainerFrontPicCoords[trainerPicID].coords, gTrainerFrontPicCoords[trainerPicID].y_offset, (void*) 0x2000000, gUnknown_0840B5A0[a3], trainerPicID);
+    DecompressPicFromTable_2(&gTrainerFrontPicTable[trainerPicID], gTrainerFrontPicCoords[trainerPicID].coords, gTrainerFrontPicCoords[trainerPicID].y_offset, (void*)EWRAM, gUnknown_0840B5A0[a3], trainerPicID);
 
     LoadCompressedPalette(gTrainerFrontPicPaletteTable[trainerPicID].data, 16 * a3 + 256, 0x20);
     sub_8143680(a3, a3);

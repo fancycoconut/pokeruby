@@ -367,7 +367,7 @@ void LightRain_InitVars(void)
     gWeatherPtr->unknown_6D9 = 10;
     gWeatherPtr->gammaTargetIndex = 3;
     gWeatherPtr->gammaStepDelay = 20;
-    SetRainStrengthFromSoundEffect(SE_T_KOAME);
+    SetRainStrengthFromSoundEffect(SE_RAIN);
 }
 
 void LightRain_Main(void);
@@ -544,7 +544,7 @@ void sub_807E6F0(struct Sprite *sprite, u16 b)
     }
 }
 
-extern const struct SpriteSheet sRainSpriteSheet;  // defined below
+static const struct SpriteSheet sRainSpriteSheet;  // defined below
 
 void LoadRainSpriteSheet(void)
 {
@@ -1075,7 +1075,7 @@ void MedRain_InitVars(void)
     gWeatherPtr->gammaStepDelay = 20;
     gWeatherPtr->weatherGfxLoaded = FALSE;  // duplicate assignment
     gWeatherPtr->unknown_6ED = 0;
-    SetRainStrengthFromSoundEffect(SE_T_AME);
+    SetRainStrengthFromSoundEffect(SE_THUNDERSTORM);
 }
 
 void Rain_Main(void);
@@ -1102,7 +1102,7 @@ void HeavyRain_InitVars(void)
     gWeatherPtr->gammaTargetIndex = 3;
     gWeatherPtr->gammaStepDelay = 20;
     gWeatherPtr->weatherGfxLoaded = FALSE;  // duplicate assignment
-    SetRainStrengthFromSoundEffect(SE_T_OOAME);
+    SetRainStrengthFromSoundEffect(SE_DOWNPOUR);
 }
 
 void HeavyRain_InitAll(void)
@@ -1269,9 +1269,9 @@ void UpdateThunderSound(void)
             if (IsSEPlaying())
                 return;
             if (Random() & 1)
-                PlaySE(SE_T_KAMI);
+                PlaySE(SE_THUNDER);
             else
-                PlaySE(SE_T_KAMI2);
+                PlaySE(SE_THUNDER2);
             gWeatherPtr->unknown_6ED = 0;
         }
         else

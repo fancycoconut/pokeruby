@@ -163,60 +163,60 @@ static const u8 sFemaleTrainerClasses[] =
 
 static const u8 sMaleTrainerGfxIds[] =
 {
-    EVENT_OBJ_GFX_HIKER,
-    EVENT_OBJ_GFX_TUBER_M,
-    EVENT_OBJ_GFX_MAN_4,
-    EVENT_OBJ_GFX_BOY_4,
-    EVENT_OBJ_GFX_MANIAC,
-    EVENT_OBJ_GFX_RUNNING_TRIATHLETE_M,
-    EVENT_OBJ_GFX_BLACK_BELT,
-    EVENT_OBJ_GFX_MAN_6,
-    EVENT_OBJ_GFX_MAN_6,
-    EVENT_OBJ_GFX_CAMPER,
-    EVENT_OBJ_GFX_MANIAC,
-    EVENT_OBJ_GFX_PSYCHIC_M,
-    EVENT_OBJ_GFX_GENTLEMAN,
-    EVENT_OBJ_GFX_SCHOOL_KID_M,
-    EVENT_OBJ_GFX_MAN_3,
-    EVENT_OBJ_GFX_OLD_MAN_1,
-    EVENT_OBJ_GFX_YOUNGSTER,
-    EVENT_OBJ_GFX_FISHERMAN,
-    EVENT_OBJ_GFX_CYCLING_TRIATHLETE_M,
-    EVENT_OBJ_GFX_RUNNING_TRIATHLETE_M,
-    EVENT_OBJ_GFX_RUNNING_TRIATHLETE_M,
-    EVENT_OBJ_GFX_MAN_4,
-    EVENT_OBJ_GFX_MAN_6,
-    EVENT_OBJ_GFX_LITTLE_BOY_1,
-    EVENT_OBJ_GFX_SAILOR,
-    EVENT_OBJ_GFX_MANIAC,
-    EVENT_OBJ_GFX_MAN_5,
-    EVENT_OBJ_GFX_CAMPER,
-    EVENT_OBJ_GFX_BUG_CATCHER,
-    EVENT_OBJ_GFX_HIKER,
+    OBJ_EVENT_GFX_HIKER,
+    OBJ_EVENT_GFX_TUBER_M,
+    OBJ_EVENT_GFX_MAN_4,
+    OBJ_EVENT_GFX_BOY_4,
+    OBJ_EVENT_GFX_MANIAC,
+    OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M,
+    OBJ_EVENT_GFX_BLACK_BELT,
+    OBJ_EVENT_GFX_MAN_6,
+    OBJ_EVENT_GFX_MAN_6,
+    OBJ_EVENT_GFX_CAMPER,
+    OBJ_EVENT_GFX_MANIAC,
+    OBJ_EVENT_GFX_PSYCHIC_M,
+    OBJ_EVENT_GFX_GENTLEMAN,
+    OBJ_EVENT_GFX_SCHOOL_KID_M,
+    OBJ_EVENT_GFX_MAN_3,
+    OBJ_EVENT_GFX_OLD_MAN_1,
+    OBJ_EVENT_GFX_YOUNGSTER,
+    OBJ_EVENT_GFX_FISHERMAN,
+    OBJ_EVENT_GFX_CYCLING_TRIATHLETE_M,
+    OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M,
+    OBJ_EVENT_GFX_RUNNING_TRIATHLETE_M,
+    OBJ_EVENT_GFX_MAN_4,
+    OBJ_EVENT_GFX_MAN_6,
+    OBJ_EVENT_GFX_LITTLE_BOY_1,
+    OBJ_EVENT_GFX_SAILOR,
+    OBJ_EVENT_GFX_MANIAC,
+    OBJ_EVENT_GFX_MAN_5,
+    OBJ_EVENT_GFX_CAMPER,
+    OBJ_EVENT_GFX_BUG_CATCHER,
+    OBJ_EVENT_GFX_HIKER,
 };
 
 static const u8 sFemaleTrainerGfxIds[] =
 {
-    EVENT_OBJ_GFX_WOMAN_3,
-    EVENT_OBJ_GFX_TUBER_F,
-    EVENT_OBJ_GFX_WOMAN_7,
-    EVENT_OBJ_GFX_WOMAN_1,
-    EVENT_OBJ_GFX_WOMAN_3,
-    EVENT_OBJ_GFX_BEAUTY,
-    EVENT_OBJ_GFX_LASS,
-    EVENT_OBJ_GFX_GIRL_3,
-    EVENT_OBJ_GFX_WOMAN_2,
-    EVENT_OBJ_GFX_OLD_WOMAN_1,
-    EVENT_OBJ_GFX_CYCLING_TRIATHLETE_F,
-    EVENT_OBJ_GFX_RUNNING_TRIATHLETE_F,
-    EVENT_OBJ_GFX_RUNNING_TRIATHLETE_F,
-    EVENT_OBJ_GFX_GIRL_3,
-    EVENT_OBJ_GFX_WOMAN_7,
-    EVENT_OBJ_GFX_RUNNING_TRIATHLETE_F,
-    EVENT_OBJ_GFX_PICNICKER,
-    EVENT_OBJ_GFX_WOMAN_3,
-    EVENT_OBJ_GFX_PICNICKER,
-    EVENT_OBJ_GFX_LASS,
+    OBJ_EVENT_GFX_WOMAN_3,
+    OBJ_EVENT_GFX_TUBER_F,
+    OBJ_EVENT_GFX_WOMAN_7,
+    OBJ_EVENT_GFX_WOMAN_1,
+    OBJ_EVENT_GFX_WOMAN_3,
+    OBJ_EVENT_GFX_BEAUTY,
+    OBJ_EVENT_GFX_LASS,
+    OBJ_EVENT_GFX_GIRL_3,
+    OBJ_EVENT_GFX_WOMAN_2,
+    OBJ_EVENT_GFX_OLD_WOMAN_1,
+    OBJ_EVENT_GFX_CYCLING_TRIATHLETE_F,
+    OBJ_EVENT_GFX_RUNNING_TRIATHLETE_F,
+    OBJ_EVENT_GFX_RUNNING_TRIATHLETE_F,
+    OBJ_EVENT_GFX_GIRL_3,
+    OBJ_EVENT_GFX_WOMAN_7,
+    OBJ_EVENT_GFX_RUNNING_TRIATHLETE_F,
+    OBJ_EVENT_GFX_PICNICKER,
+    OBJ_EVENT_GFX_WOMAN_3,
+    OBJ_EVENT_GFX_PICNICKER,
+    OBJ_EVENT_GFX_LASS,
 };
 
 const u16 gBattleTowerBannedSpecies[] =
@@ -549,7 +549,7 @@ void SetBattleTowerTrainerGfxId(u8 trainerIndex)
         return;
     }
 
-    VarSet(VAR_OBJ_GFX_ID_0, EVENT_OBJ_GFX_BOY_1);
+    VarSet(VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_BOY_1);
 }
 
 void SetEReaderTrainerGfxId(void)
@@ -1282,7 +1282,7 @@ void sub_81354CC(void)
         break;
     }
 
-    SetMainCallback2(c2_exit_to_overworld_1_continue_scripts_restart_music);
+    SetMainCallback2(CB2_ReturnToFieldContinueScriptPlayMapMusic);
 }
 
 void sub_8135534(u8 taskId)
@@ -1290,7 +1290,7 @@ void sub_8135534(u8 taskId)
     if (IsBattleTransitionDone() == TRUE)
     {
         gMain.savedCallback = sub_81354CC;
-        SetMainCallback2(sub_800E7C4);
+        SetMainCallback2(CB2_InitBattle);
         DestroyTask(taskId);
     }
 }
@@ -1805,9 +1805,9 @@ void PrintEReaderTrainerGreeting(void)
 
 void PrintEReaderTrainerFarewellMessage(void)
 {
-    if (gBattleOutcome == BATTLE_DREW)
+    if (gBattleOutcome == B_OUTCOME_DREW)
         gStringVar4[0] = EOS;
-    else if (gBattleOutcome == BATTLE_WON)
+    else if (gBattleOutcome == B_OUTCOME_WON)
         PrintBattleTowerTrainerMessage(gSaveBlock2.battleTower.ereaderTrainer.farewellPlayerWon);
     else
         PrintBattleTowerTrainerMessage(gSaveBlock2.battleTower.ereaderTrainer.farewellPlayerLost);

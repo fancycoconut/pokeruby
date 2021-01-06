@@ -36,24 +36,12 @@
 #include "scanline_effect.h"
 #include "menu_helpers.h"
 #include "ewram.h"
-
-// External stuff
-extern void FreeAndReserveObjectSpritePalettes(void);
-extern void SetVerticalScrollIndicatorPriority();
-extern void sub_809D104(u16 *, u16, u16, const u8 *, u16, u16, u16, u16);
-extern void PauseVerticalScrollIndicator();
-extern u8 sub_80F9284(void);
-extern void sub_808B5B4();
-extern u8 sub_80F92F4();
-extern void pal_fill_black(void);
-extern bool8 IsWeatherNotFadingIn(void);
-extern u8 sub_80F931C();
-extern void sub_808A3F8(u8);
-extern void Shop_FadeReturnToMartMenu(void);
-extern void sub_80546B8(u8);
-extern void sub_804E990(u8);
-extern void sub_802E424(u8);
-extern void ScriptUnfreezeEventObjects(void);
+#include "berry_blender.h"
+#include "field_fadetransition.h"
+#include "shop.h"
+#include "field_weather.h"
+#include "pokemon_storage_system.h"
+#include "event_object_lock.h"
 
 struct UnknownStruct2
 {
@@ -153,8 +141,8 @@ static const u8 *sPopupMenuActionList;
 // common
 void (*gFieldItemUseCallback)(u8) = NULL;
 extern u16 gBattle_BG1_Y;
-extern struct PocketScrollState gBagPocketScrollStates[];
-extern struct ItemSlot *gCurrentBagPocketItemSlots;  // selected pocket item slots
+struct PocketScrollState gBagPocketScrollStates[5];
+struct ItemSlot *gCurrentBagPocketItemSlots;  // selected pocket item slots
 extern const u8 Event_NoRegisteredItem[];
 
 // TODO: decompile the debug code so we can use static in this file
@@ -762,7 +750,7 @@ static void sub_80A39B8(u16 *a, u8 b)
 {
     u8 var = b * 2;
 
-    sub_809D104(a, 4, 10, gBagScreenLabels_Tilemap, 0, var, 8, 2);
+    sub_809D104((void *)a, 4, 10, gBagScreenLabels_Tilemap, 0, var, 8, 2);
 }
 
 static void sub_80A39E4(u16 *a, u8 b, u8 c, s8 d)
@@ -776,8 +764,8 @@ static void sub_80A39E4(u16 *a, u8 b, u8 c, s8 d)
         if (b == 5)
             r7 = 2;
 
-        sub_809D104(a, 4, 10, gBagScreenLabels_Tilemap, 8 - c, r2, c, 2);
-        sub_809D104(a, c + 4, 10, gBagScreenLabels_Tilemap, 0, r7, 8 - c, 2);
+        sub_809D104((void *)a, 4, 10, gBagScreenLabels_Tilemap, 8 - c, r2, c, 2);
+        sub_809D104((void *)a, c + 4, 10, gBagScreenLabels_Tilemap, 0, r7, 8 - c, 2);
     }
     else if (d == 1)
     {
@@ -785,8 +773,8 @@ static void sub_80A39E4(u16 *a, u8 b, u8 c, s8 d)
         if (b == 1)
             r7 = 10;
 
-        sub_809D104(a, 4, 10, gBagScreenLabels_Tilemap, c, r7, 8 - c, 2);
-        sub_809D104(a, 12 - c, 10, gBagScreenLabels_Tilemap, 0, r2, c, 2);
+        sub_809D104((void *)a, 4, 10, gBagScreenLabels_Tilemap, c, r7, 8 - c, 2);
+        sub_809D104((void *)a, 12 - c, 10, gBagScreenLabels_Tilemap, 0, r2, c, 2);
     }
 }
 
@@ -2518,7 +2506,7 @@ void CleanUpOverworldMessage(u8 taskId)
 {
     Menu_EraseWindowRect(0, 13, 29, 19);
     DestroyTask(taskId);
-    ScriptUnfreezeEventObjects();
+    ScriptUnfreezeObjectEvents();
     ScriptContext2_Disable();
 }
 
@@ -2865,7 +2853,7 @@ static void sub_80A6548(u8 taskId)
 
 static void sub_80A6574(u8 taskId)
 {
-    PlaySE(SE_REGI);
+    PlaySE(SE_SHOP);
     sub_80A6870(gSpecialVar_ItemId, gTasks[taskId].data[1]);
     gTasks[taskId].func = sub_80A6548;
 }
@@ -3141,7 +3129,7 @@ bool32 UseRegisteredKeyItem(void)
             u8 taskId;
 
             ScriptContext2_Enable();
-            FreezeEventObjects();
+            FreezeObjectEvents();
             sub_80594C0();
             sub_80597F4();
             gSpecialVar_ItemId = gSaveBlock1.registeredItem;

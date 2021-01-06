@@ -68,7 +68,7 @@ struct LinkPlayer
     /* 0x08 */ u8 name[11];
     /* 0x13 */ u8 gender;
     /* 0x14 */ u32 linkType;
-    /* 0x18 */ u16 lp_field_18;
+    /* 0x18 */ u16 id;
     /* 0x1A */ u16 language;
 };
 
@@ -147,7 +147,7 @@ extern u16 word_3002910[];
 extern bool8 gReceivedRemoteLinkPlayers;
 extern bool8 gLinkOpen;
 extern bool8 gLinkPlayerPending[MAX_LINK_PLAYERS];
-void (*gLinkCallback)(void);
+extern void (*gLinkCallback)(void);
 extern u8 gUnknown_Debug_30030E0;
 
 void Task_DestroySelf(u8);

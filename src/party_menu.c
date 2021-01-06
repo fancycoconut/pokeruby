@@ -102,6 +102,8 @@ static void sub_806BF24(const u8 *a, u8 monIndex, u8 c, u8 d);
 static void sub_806BB9C(u8 a);
 static void sub_806BBEC(u8 a);
 
+void (*gPokemonItemUseCallback)(u8 taskId, u16 itemId, TaskFunc taskFunc);
+
 extern u16 Random();
 
 EWRAM_DATA u8 gUnknown_0202E8F4 = 0;
@@ -2883,11 +2885,11 @@ void SpriteCB_HeldItemIcon(struct Sprite *sprite)
 
     if (gSprites[data7].invisible)
     {
-        sprite->invisible = 1;
+        sprite->invisible = TRUE;
     }
     else
     {
-        sprite->invisible = 0;
+        sprite->invisible = FALSE;
         sprite->pos1.x = gSprites[data7].pos1.x + gSprites[data7].pos2.x;
         sprite->pos1.y = gSprites[data7].pos1.y + gSprites[data7].pos2.y;
     }
@@ -2977,7 +2979,7 @@ void CreateHeldItemIcon_806DCD4(u8 taskId, u8 monIndex, u16 item)
 
     if (!item)
     {
-        gSprites[heldItemSpriteId].invisible = 1;
+        gSprites[heldItemSpriteId].invisible = TRUE;
     }
     else
     {
@@ -2986,7 +2988,7 @@ void CreateHeldItemIcon_806DCD4(u8 taskId, u8 monIndex, u16 item)
         else
             StartSpriteAnim(&gSprites[heldItemSpriteId], 0);
 
-        gSprites[heldItemSpriteId].invisible = 0;
+        gSprites[heldItemSpriteId].invisible = FALSE;
     }
 
     gSprites[heldItemSpriteId].callback(&gSprites[heldItemSpriteId]);
@@ -3157,7 +3159,7 @@ void SetHeldItemIconVisibility(u8 taskId, u8 monIndex)
     spriteId = GetMonHeldItemIconSpriteId(taskId, monIndex);
     if (!GetMonData(&gPlayerParty[monIndex], MON_DATA_HELD_ITEM))
     {
-        gSprites[spriteId].invisible = 1;
+        gSprites[spriteId].invisible = TRUE;
     }
     else
     {
@@ -3179,7 +3181,7 @@ void SetHeldItemIconVisibility(u8 taskId, u8 monIndex)
             animNum = 0;
         }
         StartSpriteAnim(sprite2, animNum);
-        sprite->invisible = 0;
+        sprite->invisible = FALSE;
     }
 }
 
@@ -3901,7 +3903,7 @@ void Task_TeamMonTMMove3(u8 taskId)
 {
     if (gUnknown_0202E8F6 == 0)
     {
-        PlayFanfare(MUS_FANFA1);
+        PlayFanfare(MUS_LEVEL_UP);
         gTasks[taskId].func = Task_TeamMonTMMove4;
     }
 }
@@ -4111,7 +4113,7 @@ s16 sub_806F7E8(u8 taskId, struct BattleInterfaceStruct1 *b, s8 c)
     if (hpBarLevel < 2)
         b->unkC_0 = 6;
     vramPtr = gUnknown_08376858[IsDoubleBattle()][ewram1C000.primarySelectedMonIndex];
-    return sub_80460C8(b, &ewram1C000.unkC, vramPtr, 0);
+    return sub_80460C8(b, (int *)&ewram1C000.unkC, vramPtr, 0);
 }
 
 void sub_806F8AC(u8 taskId)
@@ -4157,7 +4159,7 @@ void sub_806FA18(u8 taskId)
     ewram1B000.unk282 = sub_806F7E8(taskId, &sp0, 1);
     if (ewram1B000.unk282 == -1)
     {
-        PlaySE(SE_KAIFUKU);
+        PlaySE(SE_USE_ITEM);
         ewram1C000.unkC = 0;
         gTasks[taskId].data[11] -= gTasks[taskId].data[12];
         SetMonData(ewram1C000.pokemon, MON_DATA_HP, &gTasks[taskId].data[11]);
@@ -4341,9 +4343,9 @@ void UseMedicine(u8 taskId, u16 item, TaskFunc func)
 
         gUnknown_0202E8F4 = 1;
         if (!IsBlueYellowRedFlute(item))
-            PlaySE(SE_KAIFUKU);
+            PlaySE(SE_USE_ITEM);
         else
-            PlaySE(SE_BIDORO);
+            PlaySE(SE_GLASS_FLUTE);
         statusAndPkrs = GetMonStatusAndPokerus(ewram1C000.pokemon);
         if (statusAndPkrs == STATUS_PRIMARY_POKERUS || statusAndPkrs == STATUS_PRIMARY_NONE)
             PartyMenuUpdateLevelOrStatus(ewram1C000.pokemon, ewram1C000.primarySelectedMonIndex);
@@ -4421,7 +4423,7 @@ void sub_8070088(u8 taskId)
         {
             gUnknown_0202E8F4 = 1;
             Menu_EraseWindowRect(WINDOW_LEFT, 14, WINDOW_RIGHT, 19);
-            PlaySE(SE_KAIFUKU);
+            PlaySE(SE_USE_ITEM);
             PartyMenuUpdateLevelOrStatus(ewram1C000.pokemon, ewram1C000.primarySelectedMonIndex);
             task_pc_turn_off(&gUnknown_083769A8[IsDoubleBattle() * 12 + ewram1C000.primarySelectedMonIndex * 2], 9);
             ewram1B000.unk261 = 2;
@@ -4573,7 +4575,7 @@ void DoRecoverPP(u8 taskId)
     else
     {
         gUnknown_0202E8F4 = 1;
-        PlaySE(SE_KAIFUKU);
+        PlaySE(SE_USE_ITEM);
         RemoveBagItem(ewram1C000.secondarySelectedIndex, 1);
         r5 = GetMonData(ewram1C000.pokemon, MON_DATA_MOVE1 + gTasks[taskId].data[11]);
         StringCopy(gStringVar1, gMoveNames[r5]);

@@ -2,13 +2,13 @@
 #include "gba/flash_internal.h"
 #include "gba/m4a_internal.h"
 #include "main.h"
+#include "battle_controllers.h"
 #include "intro.h"
 #include "link.h"
 #include "load_save.h"
 #include "m4a.h"
 #include "play_time.h"
 #include "random.h"
-#include "rom3.h"
 #include "overworld.h"
 #include "rtc.h"
 #include "siirtc.h"
@@ -24,20 +24,14 @@ static void VCountIntr(void);
 static void SerialIntr(void);
 static void IntrDummy(void);
 
-#ifdef SAPPHIRE
-#define GAME_VERSION VERSION_SAPPHIRE
-#else
-#define GAME_VERSION VERSION_RUBY
-#endif
-
 const u8 gGameVersion = GAME_VERSION;
-
 const u8 gGameLanguage = GAME_LANGUAGE;
 
+// International versions of the debug menu use a different format.
 #if defined(ENGLISH)
-const char BuildDateTime[] = "2002 10 15 20:34";
+const u8 BuildDateTime[] = "2002 10 15 20:34";
 #elif defined(GERMAN)
-const char BuildDateTime[] = "$Name: debug-Euro-2003-05-09-A $";
+const u8 BuildDateTime[] = "$Name: debug-Euro-2003-05-09-A $";
 #endif
 
 const IntrFunc gIntrTableTemplate[] =
@@ -89,7 +83,27 @@ static void WaitForVBlank(void);
 
 void AgbMain()
 {
+#if MODERN
+    // Modern compilers are liberal with the stack on entry to this function,
+    // so RegisterRamReset may crash if it resets IWRAM.
+    RegisterRamReset(RESET_ALL & ~RESET_IWRAM);
+    asm("mov\tr1, #0xC0\n"
+        "\tlsl\tr1, r1, #0x12\n"
+        "\tmov r2, #0xFC\n"
+        "\tlsl r2, r2, #0x7\n"
+        "\tadd\tr2, r1, r2\n"
+        "\tmov\tr0, #0\n"
+        "\tmov\tr3, r0\n"
+        "\tmov\tr4, r0\n"
+        "\tmov\tr5, r0\n"
+        ".LCU0:\n"
+        "\tstmia r1!, {r0, r3, r4, r5}\n"
+        "\tcmp\tr1, r2\n"
+        "\tbcc\t.LCU0\n"
+    );
+#else
     RegisterRamReset(RESET_ALL);
+#endif //MODERN
     REG_WAITCNT = WAITCNT_PREFETCH_ENABLE | WAITCNT_WS0_S_1 | WAITCNT_WS0_N_3;
     InitKeys();
     InitIntrHandlers();

@@ -1,5 +1,5 @@
 #include "global.h"
-#include "constants/battle_constants.h"
+#include "constants/battle.h"
 #include "constants/hold_effects.h"
 #include "constants/items.h"
 #include "constants/species.h"
@@ -21,7 +21,7 @@ extern u8 gBankInMenu;
 extern u8 gBattlersCount;
 extern u16 gBattlerPartyIndexes[];
 extern u8 gActiveBattler;
-extern u8 gStringBank;
+extern u8 gPotentialItemEffectBattler;
 extern struct BattlePokemon gBattleMons[];
 extern struct BattleEnigmaBerry gEnigmaBerries[];
 
@@ -75,7 +75,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
         holdEffect = ItemId_GetHoldEffect(heldItem);
     }
 
-    gStringBank = gBankInMenu;
+    gPotentialItemEffectBattler = gBankInMenu;
     if (gMain.inBattle)
     {
         gActiveBattler = gBankInMenu;
@@ -96,7 +96,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
         sp34 = 4;
     }
 
-    if (!IS_POKEMON_ITEM(item))
+    if (!ITEM_HAS_EFFECT(item))
         return TRUE;
     if (gItemEffectTable[item - 13] == NULL && item != ITEM_ENIGMA_BERRY)
         return TRUE;
@@ -332,8 +332,8 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
                                         // I have to re-use this variable to match.
                                         r5 = gActiveBattler;
                                         gActiveBattler = sp34;
-                                        EmitGetAttributes(0, 0, 0);
-                                        MarkBufferBankForExecution(gActiveBattler);
+                                        BtlController_EmitGetMonData(0, 0, 0);
+                                        MarkBattlerForControllerExec(gActiveBattler);
                                         gActiveBattler = r5;
                                     }
                                 }
@@ -367,7 +367,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
                                     SetMonData(pkmn, MON_DATA_PP1 + r5, &data);
                                     if (gMain.inBattle
                                      && sp34 != 4 && !(gBattleMons[sp34].status2 & 0x200000)
-                                     && !(gDisableStructs[sp34].unk18_b & gBitTable[r5]))
+                                     && !(gDisableStructs[sp34].mimickedMoves & gBitTable[r5]))
                                         gBattleMons[sp34].pp[r5] = data;
                                     retVal = FALSE;
                                 }
@@ -392,7 +392,7 @@ bool8 PokemonUseItemEffects(struct Pokemon *pkmn, u16 item, u8 partyIndex, u8 mo
                                 SetMonData(pkmn, MON_DATA_PP1 + moveIndex, &data);
                                 if (gMain.inBattle
                                  && sp34 != 4 && !(gBattleMons[sp34].status2 & 0x200000)
-                                 && !(gDisableStructs[sp34].unk18_b & gBitTable[moveIndex]))
+                                 && !(gDisableStructs[sp34].mimickedMoves & gBitTable[moveIndex]))
                                     gBattleMons[sp34].pp[moveIndex] = data;
                                 retVal = FALSE;
                             }

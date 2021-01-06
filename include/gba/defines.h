@@ -6,6 +6,7 @@
 #define TRUE  1
 #define FALSE 0
 
+#define BSS_DATA   __attribute__((section(".bss")))
 #define IWRAM_DATA __attribute__((section("iwram_data")))
 #define EWRAM_DATA __attribute__((section("ewram_data")))
 #define UNUSED __attribute__((unused))
@@ -16,6 +17,9 @@
 #define SOUND_INFO_PTR (*(struct SoundInfo **)0x3007FF0)
 #define INTR_CHECK     (*(u16 *)0x3007FF8)
 #define INTR_VECTOR    (*(void **)0x3007FFC)
+
+#define EWRAM 0x2000000
+#define IWRAM 0x3000000
 
 #define PLTT      0x5000000
 #define PLTT_SIZE 0x400

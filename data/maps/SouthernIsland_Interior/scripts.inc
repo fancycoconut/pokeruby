@@ -1,6 +1,6 @@
 SouthernIsland_Interior_MapScripts:: @ 8160B53
-	map_script 5, SouthernIsland_Interior_MapScript1_160B5E
-	map_script 3, SouthernIsland_Interior_MapScript1_160B6C
+	map_script MAP_SCRIPT_ON_RESUME, SouthernIsland_Interior_MapScript1_160B5E
+	map_script MAP_SCRIPT_ON_TRANSITION, SouthernIsland_Interior_MapScript1_160B6C
 	.byte 0
 
 SouthernIsland_Interior_MapScript1_160B5E:: @ 8160B5E
@@ -13,32 +13,32 @@ SouthernIsland_Interior_EventScript_160B68:: @ 8160B68
 
 SouthernIsland_Interior_MapScript1_160B6C:: @ 8160B6C
 	.ifdef SAPPHIRE
-	setvar VAR_OBJ_GFX_ID_1, EVENT_OBJ_GFX_LATIOS
+	setvar VAR_OBJ_GFX_ID_1, OBJ_EVENT_GFX_LATIOS
 	.else
-	setvar VAR_OBJ_GFX_ID_1, EVENT_OBJ_GFX_LATIAS
+	setvar VAR_OBJ_GFX_ID_1, OBJ_EVENT_GFX_LATIAS
 	.endif
 	call SouthernIsland_Interior_EventScript_160B77
 	end
 
 SouthernIsland_Interior_EventScript_160B77:: @ 8160B77
 	checkplayergender
-	compare RESULT, 0
+	compare VAR_RESULT, 0
 	goto_if_eq SouthernIsland_Interior_EventScript_160B8F
-	compare RESULT, 1
+	compare VAR_RESULT, 1
 	goto_if_eq SouthernIsland_Interior_EventScript_160B95
 	end
 
 SouthernIsland_Interior_EventScript_160B8F:: @ 8160B8F
-	setvar VAR_OBJ_GFX_ID_0, EVENT_OBJ_GFX_RIVAL_BRENDAN_NORMAL
+	setvar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_RIVAL_BRENDAN_NORMAL
 	return
 
 SouthernIsland_Interior_EventScript_160B95:: @ 8160B95
-	setvar VAR_OBJ_GFX_ID_0, EVENT_OBJ_GFX_RIVAL_MAY_NORMAL
+	setvar VAR_OBJ_GFX_ID_0, OBJ_EVENT_GFX_RIVAL_MAY_NORMAL
 	return
 
 SouthernIsland_Interior_EventScript_160B9B:: @ 8160B9B
 	lockall
-	setvar VAR_SPECIAL_8, 12
+	setvar VAR_0x8008, 12
 	goto SouthernIsland_Interior_EventScript_160BA7
 	end
 
@@ -71,7 +71,7 @@ SouthernIsland_Interior_EventScript_160BA7:: @ 8160BA7
 	end
 
 SouthernIsland_Interior_EventScript_160C08:: @ 8160C08
-	msgbox SouthernIsland_Interior_Text_1C52C5, 4
+	msgbox SouthernIsland_Interior_Text_1C52C5, MSGBOX_DEFAULT
 	releaseall
 	end
 
@@ -79,7 +79,7 @@ SouthernIsland_Interior_Movement_160C12:: @ 8160C12
 	walk_up
 	walk_up
 	walk_up
-	end_movement
+	step_end
 
 SouthernIsland_Interior_Movement_160C16:: @ 8160C16
 	delay_16
@@ -93,7 +93,7 @@ SouthernIsland_Interior_Movement_160C16:: @ 8160C16
 	walk_down
 	walk_down
 	walk_in_place_fastest_up
-	end_movement
+	step_end
 
 SouthernIsland_Interior_Movement_160C22:: @ 8160C22
 	walk_down
@@ -107,4 +107,4 @@ SouthernIsland_Interior_Movement_160C22:: @ 8160C22
 	walk_down
 	walk_down
 	walk_down
-	end_movement
+	step_end

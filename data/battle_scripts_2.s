@@ -1,4 +1,4 @@
-#include "constants/battle_constants.h"
+#include "constants/battle.h"
 #include "constants/items.h"
 #include "constants/songs.h"
 	.include "include/macros.inc"
@@ -77,12 +77,12 @@ BattleScript_TryNicknameCaughtMon: @ 81D9EE3
 
 BattleScript_GiveCaughtMonEnd: @ 81D9EF8
 	givecaughtmon
-	setbyte gBattleOutcome, BATTLE_CAUGHT
+	setbyte gBattleOutcome, B_OUTCOME_CAUGHT
 	finishturn
 
 BattleScript_WallyBallThrow:: @ 81D9F00
 	printstring BATTLE_TEXT_BallCaught2
-	setbyte gBattleOutcome, BATTLE_CAUGHT
+	setbyte gBattleOutcome, B_OUTCOME_CAUGHT
 	finishturn
 
 BattleScript_ShakeBallThrow:: @ 81D9F0A
@@ -92,7 +92,7 @@ BattleScript_ShakeBallThrow:: @ 81D9F0A
 	jumpifbyte NOT_EQUAL, gNumSafariBalls, 0, BattleScript_ShakeBallThrowEnd
 	printstring BATTLE_TEXT_SafariOver
 	waitmessage 64
-	setbyte gBattleOutcome, BATTLE_OUT_OF_BALLS
+	setbyte gBattleOutcome, B_OUTCOME_NO_SAFARI_BALLS
 
 BattleScript_ShakeBallThrowEnd: @ 81D9F34
 	finishaction
@@ -112,7 +112,7 @@ BattleScript_PlayerUsesItem: @ 81D9F45
 
 BattleScript_OpponentUsesHealItem: @ 81D9F4F
 	pause 48
-	playse SE_KAIFUKU
+	playse SE_USE_ITEM
 	printstring BATTLE_TEXT_Used2
 	waitmessage 64
 	useitemonopponent
@@ -128,7 +128,7 @@ BattleScript_OpponentUsesHealItem: @ 81D9F4F
 
 BattleScript_OpponentUsesStatusCureItem: @ 81D9F7B
 	pause 48
-	playse SE_KAIFUKU
+	playse SE_USE_ITEM
 	printstring BATTLE_TEXT_Used2
 	waitmessage 64
 	useitemonopponent
@@ -141,7 +141,7 @@ BattleScript_OpponentUsesStatusCureItem: @ 81D9F7B
 
 BattleScript_OpponentUsesXItem: @ 81D9F9C
 	pause 48
-	playse SE_KAIFUKU
+	playse SE_USE_ITEM
 	printstring BATTLE_TEXT_Used2
 	waitmessage 64
 	useitemonopponent
@@ -153,7 +153,7 @@ BattleScript_OpponentUsesXItem: @ 81D9F9C
 
 BattleScript_OpponentUsesGuardSpecs: @ 81D9FBB
 	pause 48
-	playse SE_KAIFUKU
+	playse SE_USE_ITEM
 	printstring BATTLE_TEXT_Used2
 	waitmessage 64
 	useitemonopponent
@@ -164,8 +164,8 @@ BattleScript_OpponentUsesGuardSpecs: @ 81D9FBB
 	finishaction
 
 BattleScript_RunByUsingItem: @ 81D9FDA
-	playse SE_NIGERU
-	setbyte gBattleOutcome, BATTLE_RAN
+	playse SE_FLEE
+	setbyte gBattleOutcome, B_OUTCOME_RAN
 	finishturn
 
 BattleScript_ActionWatchesCarefully: @ 81D9FE4

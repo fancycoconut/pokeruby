@@ -17,6 +17,7 @@
 #include "field_player_avatar.h"
 #include "field_camera.h"
 #include "constants/songs.h"
+#include "constants/metatile_labels.h"
 #include "sound.h"
 #include "field_tasks.h"
 
@@ -146,46 +147,46 @@ void ResetFieldTasksArgs(void)
     }
 }
 
-const struct MetatileOffset gUnknown_08376384[][2] = {
-    {{  0,  0,0x259}, {  0,  1,0x261}},
-    {{  0, -1,0x259}, {  0,  0,0x261}},
-    {{  0,  0,0x252}, {  1,  0,0x253}},
-    {{ -1,  0,0x252}, {  0,  0,0x253}}
+const struct MetatileOffset gUnknown_08376384[] = {
+    { 0,  0, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Vertical0)}, {0, 1, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Vertical1)},
+    { 0, -1, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Vertical0)}, {0, 0, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Vertical1)},
+    { 0,  0, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Horizontal0)}, {1, 0, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Horizontal1)},
+    {-1,  0, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Horizontal0)}, {0, 0, METATILE_ID(Pacifidlog, HalfSubmergedLogs_Horizontal1)}
 };
 
-const struct MetatileOffset gUnknown_083763A4[][2] = {
-    {{  0,  0,0x25A}, {  0,  1,0x262}},
-    {{  0, -1,0x25A}, {  0,  0,0x262}},
-    {{  0,  0,0x254}, {  1,  0,0x255}},
-    {{ -1,  0,0x254}, {  0,  0,0x255}}
+const struct MetatileOffset gUnknown_083763A4[] = {
+    { 0,  0, METATILE_ID(Pacifidlog, SubmergedLogs_Vertical0)}, {0, 1, METATILE_ID(Pacifidlog, SubmergedLogs_Vertical1)},
+    { 0, -1, METATILE_ID(Pacifidlog, SubmergedLogs_Vertical0)}, {0, 0, METATILE_ID(Pacifidlog, SubmergedLogs_Vertical1)},
+    { 0,  0, METATILE_ID(Pacifidlog, SubmergedLogs_Horizontal0)}, {1, 0, METATILE_ID(Pacifidlog, SubmergedLogs_Horizontal1)},
+    {-1,  0, METATILE_ID(Pacifidlog, SubmergedLogs_Horizontal0)}, {0, 0, METATILE_ID(Pacifidlog, SubmergedLogs_Horizontal1)}
 };
 
-const struct MetatileOffset gUnknown_083763C4[][2] = {
-    {{  0,  0,0x258}, {  0,  1,0x260}},
-    {{  0, -1,0x258}, {  0,  0,0x260}},
-    {{  0,  0,0x250}, {  1,  0,0x251}},
-    {{ -1,  0,0x250}, {  0,  0,0x251}}
+const struct MetatileOffset gUnknown_083763C4[] = {
+    { 0,  0, METATILE_ID(Pacifidlog, FloatingLogs_Vertical0)}, {0, 1, METATILE_ID(Pacifidlog, FloatingLogs_Vertical1)},
+    { 0, -1, METATILE_ID(Pacifidlog, FloatingLogs_Vertical0)}, {0, 0, METATILE_ID(Pacifidlog, FloatingLogs_Vertical1)},
+    { 0,  0, METATILE_ID(Pacifidlog, FloatingLogs_Horizontal0)}, {1, 0, METATILE_ID(Pacifidlog, FloatingLogs_Horizontal1)},
+    {-1,  0, METATILE_ID(Pacifidlog, FloatingLogs_Horizontal0)}, {0, 0, METATILE_ID(Pacifidlog, FloatingLogs_Horizontal1)}
 };
 
 void DummyPerStepCallback(u8 taskId) {}
 
-const struct MetatileOffset *sub_80695E0(const struct MetatileOffset a0[][2], s8 a1)
+const struct MetatileOffset *sub_80695E0(const struct MetatileOffset *a0, u16 a1)
 {
     if (MetatileBehavior_IsPacifidlogVerticalLog1(a1))
     {
-        return a0[0];
+        return &a0[0 * 2];
     }
     else if (MetatileBehavior_IsPacifidlogVerticalLog2(a1))
     {
-        return a0[1];
+        return &a0[1 * 2];
     }
     else if (MetatileBehavior_IsPacifidlogHorizontalLog1(a1))
     {
-        return a0[2];
+        return &a0[2 * 2];
     }
     else if (MetatileBehavior_IsPacifidlogHorizontalLog2(a1))
     {
-        return a0[3];
+        return &a0[3 * 2];
     }
     else
     {
@@ -193,95 +194,23 @@ const struct MetatileOffset *sub_80695E0(const struct MetatileOffset a0[][2], s8
     }
 }
 
-#ifdef NONMATCHING
-void sub_8069638(const struct MetatileOffset offsets[][2], s16 x, s16 y, bool32 flag)
+void sub_8069638(const struct MetatileOffset *offsets, s16 x, s16 y, bool32 flag)
 {
-    const struct MetatileOffset *offsetData = sub_80695E0(offsets, MapGridGetMetatileBehaviorAt(x, y));
-    const struct MetatileOffset *offsetdata2 = offsetData;
-    if (offsetData != NULL)
+    offsets = sub_80695E0(offsets, MapGridGetMetatileBehaviorAt(x, y));
+    if (offsets)
     {
-        MapGridSetMetatileIdAt(x + offsetData[0].x, y + offsetData[0].y, offsetData[0].tileId);
+        MapGridSetMetatileIdAt(x + offsets[0].x, y + offsets[0].y, offsets[0].tileId);
         if (flag)
         {
-            CurrentMapDrawMetatileAt(x + offsetData[0].x, y + offsetData[0].y);
+            CurrentMapDrawMetatileAt(x + offsets[0].x, y + offsets[0].y);
         }
-        MapGridSetMetatileIdAt(x + offsetdata2[1].x, y + offsetdata2[1].y, offsetdata2[1].tileId);
+        MapGridSetMetatileIdAt(x + offsets[1].x, y + offsets[1].y, offsets[1].tileId);
         if (flag)
         {
-            CurrentMapDrawMetatileAt(x + offsetdata2[1].x, y + offsetdata2[1].y);
+            CurrentMapDrawMetatileAt(x + offsets[1].x, y + offsets[1].y);
         }
     }
 }
-#else
-NAKED
-void sub_8069638(const struct MetatileOffset offsets[][2], s16 x, s16 y, bool32 flag)
-{
-    asm_unified("\tpush {r4-r7,lr}\n"
-                    "\tmov r7, r8\n"
-                    "\tpush {r7}\n"
-                    "\tadds r5, r0, 0\n"
-                    "\tmov r8, r3\n"
-                    "\tlsls r1, 16\n"
-                    "\tasrs r6, r1, 16\n"
-                    "\tlsls r2, 16\n"
-                    "\tasrs r7, r2, 16\n"
-                    "\tadds r0, r6, 0\n"
-                    "\tadds r1, r7, 0\n"
-                    "\tbl MapGridGetMetatileBehaviorAt\n"
-                    "\tadds r1, r0, 0\n"
-                    "\tlsls r1, 16\n"
-                    "\tlsrs r1, 16\n"
-                    "\tadds r0, r5, 0\n"
-                    "\tbl sub_80695E0\n"
-                    "\tadds r4, r0, 0\n"
-                    "\tadds r5, r4, 0\n"
-                    "\tcmp r4, 0\n"
-                    "\tbeq _080696B6\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r4, r0]\n"
-                    "\tadds r0, r6, r0\n"
-                    "\tmovs r1, 0x1\n"
-                    "\tldrsb r1, [r4, r1]\n"
-                    "\tadds r1, r7, r1\n"
-                    "\tldrh r2, [r4, 0x2]\n"
-                    "\tbl MapGridSetMetatileIdAt\n"
-                    "\tmov r0, r8\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _0806968E\n"
-                    "\tmovs r0, 0\n"
-                    "\tldrsb r0, [r4, r0]\n"
-                    "\tadds r0, r6, r0\n"
-                    "\tmovs r1, 0x1\n"
-                    "\tldrsb r1, [r4, r1]\n"
-                    "\tadds r1, r7, r1\n"
-                    "\tbl CurrentMapDrawMetatileAt\n"
-                    "_0806968E:\n"
-                    "\tmovs r0, 0x4\n"
-                    "\tldrsb r0, [r5, r0]\n"
-                    "\tadds r0, r6, r0\n"
-                    "\tmovs r1, 0x5\n"
-                    "\tldrsb r1, [r5, r1]\n"
-                    "\tadds r1, r7, r1\n"
-                    "\tldrh r2, [r5, 0x6]\n"
-                    "\tbl MapGridSetMetatileIdAt\n"
-                    "\tmov r0, r8\n"
-                    "\tcmp r0, 0\n"
-                    "\tbeq _080696B6\n"
-                    "\tmovs r0, 0x4\n"
-                    "\tldrsb r0, [r5, r0]\n"
-                    "\tadds r0, r6, r0\n"
-                    "\tmovs r1, 0x5\n"
-                    "\tldrsb r1, [r5, r1]\n"
-                    "\tadds r1, r7, r1\n"
-                    "\tbl CurrentMapDrawMetatileAt\n"
-                    "_080696B6:\n"
-                    "\tpop {r3}\n"
-                    "\tmov r8, r3\n"
-                    "\tpop {r4-r7}\n"
-                    "\tpop {r0}\n"
-                    "\tbx r0");
-}
-#endif
 
 void sub_80696C0(s16 x, s16 y, bool32 flag)
 {
@@ -407,7 +336,7 @@ void PerStepCallback_8069864(u8 taskId)
                 data[3] = y;
                 if (MetatileBehavior_IsPacifidlogLog(MapGridGetMetatileBehaviorAt(x, y)))
                 {
-                    PlaySE(SE_MIZU);
+                    PlaySE(SE_PUDDLE);
                 }
             }
             break;
@@ -432,11 +361,11 @@ void sub_80699D8(s16 x, s16 y)
     {
         switch (MapGridGetMetatileIdAt(x, y))
         {
-            case 0x24e:
-                MapGridSetMetatileIdAt(x, y, 0x24f);
+            case METATILE_ID(Fortree, BridgeOverGrass_Raised):
+                MapGridSetMetatileIdAt(x, y, METATILE_ID(Fortree, BridgeOverGrass_Lowered));
                 break;
-            case 0x256:
-                MapGridSetMetatileIdAt(x, y, 0x257);
+            case METATILE_ID(Fortree, BridgeOverTrees_Raised):
+                MapGridSetMetatileIdAt(x, y, METATILE_ID(Fortree, BridgeOverTrees_Lowered));
                 break;
         }
     }
@@ -449,11 +378,11 @@ void sub_8069A3C(s16 x, s16 y)
     {
         switch (MapGridGetMetatileIdAt(x, y))
         {
-            case 0x24f:
-                MapGridSetMetatileIdAt(x, y, 0x24e);
+            case METATILE_ID(Fortree, BridgeOverGrass_Lowered):
+                MapGridSetMetatileIdAt(x, y, METATILE_ID(Fortree, BridgeOverGrass_Raised));
                 break;
-            case 0x257:
-                MapGridSetMetatileIdAt(x, y, 0x256);
+            case METATILE_ID(Fortree, BridgeOverTrees_Lowered):
+                MapGridSetMetatileIdAt(x, y, METATILE_ID(Fortree, BridgeOverTrees_Raised));
                 break;
         }
     }
@@ -498,7 +427,7 @@ void PerStepCallback_8069AA0(u8 taskId)
             }
             if (flag && (isFortreeBridgeCur == 1 || isFortreeBridgePrev == 1))
             {
-                PlaySE(SE_HASHI);
+                PlaySE(SE_BRIDGE_WALK);
             }
             if (isFortreeBridgePrev)
             {
@@ -619,7 +548,7 @@ void SetSootopolisGymCrackedIceMetatiles(void)
         {
             if (sub_8069D34(x, y) == TRUE)
             {
-                MapGridSetMetatileIdAt(x + 7, y + 7, 0x20e);
+                MapGridSetMetatileIdAt(x + 7, y + 7, METATILE_ID(SootopolisGym, Ice_Cracked));
             }
         }
     }
@@ -674,8 +603,8 @@ void PerStepCallback_8069DD4(u8 taskId)
             {
                 x = data[4];
                 y = data[5];
-                PlaySE(SE_RU_BARI);
-                MapGridSetMetatileIdAt(x, y, 0x20e);
+                PlaySE(SE_ICE_CRACK);
+                MapGridSetMetatileIdAt(x, y, METATILE_ID(SootopolisGym, Ice_Cracked));
                 CurrentMapDrawMetatileAt(x, y);
                 sub_8069CFC(x - 7, y - 7);
                 data[1] = 1;
@@ -690,8 +619,8 @@ void PerStepCallback_8069DD4(u8 taskId)
             {
                 x = data[4];
                 y = data[5];
-                PlaySE(SE_RU_GASYAN);
-                MapGridSetMetatileIdAt(x, y, 0x206);
+                PlaySE(SE_ICE_BREAK);
+                MapGridSetMetatileIdAt(x, y, METATILE_ID(SootopolisGym, Ice_Broken));
                 CurrentMapDrawMetatileAt(x, y);
                 data[1] = 1;
             }
@@ -711,13 +640,13 @@ void PerStepCallback_8069F64(u8 taskId)
         data[2] = y;
         if (MetatileBehavior_IsAshGrass(MapGridGetMetatileBehaviorAt(x, y)))
         {
-            if (MapGridGetMetatileIdAt(x, y) == 0x20a)
+            if (MapGridGetMetatileIdAt(x, y) == METATILE_ID(Fallarbor, AshGrass))
             {
-                StartAshFieldEffect(x, y, 0x212, 4);
+                StartAshFieldEffect(x, y, METATILE_ID(Fallarbor, NormalGrass), 4);
             }
             else
             {
-                StartAshFieldEffect(x, y, 0x206, 4);
+                StartAshFieldEffect(x, y, METATILE_ID(Lavaridge, NormalGrass), 4);
             }
             if (CheckBagHasItem(ITEM_SOOT_SACK, 1))
             {
@@ -782,13 +711,18 @@ void PerStepCallback_806A07C(u8 taskId)
     }
 }
 
-static const u16 sMuddySlopeAnimationMetatiles[] = {0xe8, 0xeb, 0xea, 0xe9};
+static const u16 sMuddySlopeAnimationMetatiles[] = {
+    METATILE_ID(General, MuddySlope_Frame0),
+    METATILE_ID(General, MuddySlope_Frame3),
+    METATILE_ID(General, MuddySlope_Frame2),
+    METATILE_ID(General, MuddySlope_Frame1)
+};
 
 static void SetMuddySlopeAnimatedMetatile(s16 *counter, s16 x, s16 y)
 {
     u16 tile;
     if (--(*counter) == 0)
-        tile = 0xe8;
+        tile = METATILE_ID(General, MuddySlope_Frame0);
     else
         tile = sMuddySlopeAnimationMetatiles[*counter / 8];
 
@@ -798,7 +732,7 @@ static void SetMuddySlopeAnimatedMetatile(s16 *counter, s16 x, s16 y)
     // Immediately set the metatile back to the original muddy slope metatile
     // but don't actualy draw it on the screen. This is so the underlying metatile
     // behvior on the map is not changed.
-    MapGridSetMetatileIdAt(x, y, 0xe8);
+    MapGridSetMetatileIdAt(x, y, METATILE_ID(General, MuddySlope_Frame0));
 }
 
 // Checks for the player traversing on muddy slope metatiles.

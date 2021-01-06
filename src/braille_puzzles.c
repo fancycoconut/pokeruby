@@ -5,7 +5,7 @@
 #include "field_effect.h"
 #include "fieldmap.h"
 #include "main.h"
-#include "event_obj_lock.h"
+#include "event_object_lock.h"
 #include "menu.h"
 #include "rom6.h"
 #include "script.h"
@@ -17,6 +17,7 @@
 #include "constants/maps.h"
 #include "constants/songs.h"
 #include "constants/species.h"
+#include "constants/metatile_labels.h"
 
 extern u8 gPlayerPartyCount;
 extern u8 gLastFieldPokeMenuOpened;
@@ -42,14 +43,14 @@ bool8 ShouldDoBrailleDigEffect(void)
 
 void DoBrailleDigEffect(void)
 {
-    MapGridSetMetatileIdAt(16, 8, 554);
-    MapGridSetMetatileIdAt(17, 8, 555);
-    MapGridSetMetatileIdAt(18, 8, 556);
-    MapGridSetMetatileIdAt(16, 9, 3634);
-    MapGridSetMetatileIdAt(17, 9, 563);
-    MapGridSetMetatileIdAt(18, 9, 3636);
+    MapGridSetMetatileIdAt(16, 8, METATILE_ID(Cave, SealedChamberEntrance_TopLeft));
+    MapGridSetMetatileIdAt(17, 8, METATILE_ID(Cave, SealedChamberEntrance_TopMid));
+    MapGridSetMetatileIdAt(18, 8, METATILE_ID(Cave, SealedChamberEntrance_TopRight));
+    MapGridSetMetatileIdAt(16, 9, METATILE_ID(Cave, SealedChamberEntrance_BottomLeft) | (COLLISION_DIR_ALL << METATILE_COLLISION_SHIFT));
+    MapGridSetMetatileIdAt(17, 9, METATILE_ID(Cave, SealedChamberEntrance_BottomMid));
+    MapGridSetMetatileIdAt(18, 9, METATILE_ID(Cave, SealedChamberEntrance_BottomRight) | (COLLISION_DIR_ALL << METATILE_COLLISION_SHIFT));
     DrawWholeMapView();
-    PlaySE(SE_BAN);
+    PlaySE(SE_BANG);
     FlagSet(FLAG_SYS_BRAILLE_DIG);
     ScriptContext2_Disable();
 }
@@ -85,14 +86,14 @@ bool8 ShouldDoBrailleStrengthEffect(void)
 void DoBrailleStrengthEffect(void)
 {
     FieldEffectActiveListRemove(FLDEFF_USE_STRENGTH);
-    MapGridSetMetatileIdAt(14, 26, 554);
-    MapGridSetMetatileIdAt(15, 26, 555);
-    MapGridSetMetatileIdAt(16, 26, 556);
-    MapGridSetMetatileIdAt(14, 27, 3634);
-    MapGridSetMetatileIdAt(15, 27, 563);
-    MapGridSetMetatileIdAt(16, 27, 3636);
+    MapGridSetMetatileIdAt(14, 26, METATILE_ID(Cave, SealedChamberEntrance_TopLeft));
+    MapGridSetMetatileIdAt(15, 26, METATILE_ID(Cave, SealedChamberEntrance_TopMid));
+    MapGridSetMetatileIdAt(16, 26, METATILE_ID(Cave, SealedChamberEntrance_TopRight));
+    MapGridSetMetatileIdAt(14, 27, METATILE_ID(Cave, SealedChamberEntrance_BottomLeft) | (COLLISION_DIR_ALL << METATILE_COLLISION_SHIFT));
+    MapGridSetMetatileIdAt(15, 27, METATILE_ID(Cave, SealedChamberEntrance_BottomMid));
+    MapGridSetMetatileIdAt(16, 27, METATILE_ID(Cave, SealedChamberEntrance_BottomRight) | (COLLISION_DIR_ALL << METATILE_COLLISION_SHIFT));
     DrawWholeMapView();
-    PlaySE(SE_BAN);
+    PlaySE(SE_BANG);
     FlagSet(FLAG_SYS_BRAILLE_STRENGTH);
     ScriptContext2_Disable();
 }
@@ -131,14 +132,14 @@ void UseFlyAncientTomb_Callback(void)
 
 void UseFlyAncientTomb_Finish(void)
 {
-    MapGridSetMetatileIdAt(14, 26, 554);
-    MapGridSetMetatileIdAt(15, 26, 555);
-    MapGridSetMetatileIdAt(16, 26, 556);
-    MapGridSetMetatileIdAt(14, 27, 3634);
-    MapGridSetMetatileIdAt(15, 27, 563);
-    MapGridSetMetatileIdAt(16, 27, 3636);
+    MapGridSetMetatileIdAt(14, 26, METATILE_ID(Cave, SealedChamberEntrance_TopLeft));
+    MapGridSetMetatileIdAt(15, 26, METATILE_ID(Cave, SealedChamberEntrance_TopMid));
+    MapGridSetMetatileIdAt(16, 26, METATILE_ID(Cave, SealedChamberEntrance_TopRight));
+    MapGridSetMetatileIdAt(14, 27, METATILE_ID(Cave, SealedChamberEntrance_BottomLeft) | (COLLISION_DIR_ALL << METATILE_COLLISION_SHIFT));
+    MapGridSetMetatileIdAt(15, 27, METATILE_ID(Cave, SealedChamberEntrance_BottomMid));
+    MapGridSetMetatileIdAt(16, 27, METATILE_ID(Cave, SealedChamberEntrance_BottomRight) | (COLLISION_DIR_ALL << METATILE_COLLISION_SHIFT));
     DrawWholeMapView();
-    PlaySE(SE_BAN);
+    PlaySE(SE_BANG);
     FlagSet(FLAG_SYS_BRAILLE_FLY);
     ScriptContext2_Disable();
 }
@@ -185,7 +186,7 @@ void Task_BrailleWait(u8 taskId)
                 data[0] = 4;
             break;
         }
-        ScriptUnfreezeEventObjects();
+        ScriptUnfreezeObjectEvents();
         DestroyTask(taskId);
         ScriptContext2_Disable();
         break;
@@ -195,7 +196,7 @@ void Task_BrailleWait(u8 taskId)
             data[0] = 4;
         break;
     case 4:
-        ScriptUnfreezeEventObjects();
+        ScriptUnfreezeObjectEvents();
         ScriptContext1_SetupScript(S_OpenRegiceChamber);
         DestroyTask(taskId);
         break;

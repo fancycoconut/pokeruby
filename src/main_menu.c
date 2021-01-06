@@ -40,13 +40,6 @@ extern u8 gBirchSpeech_AhOkayYouArePlayer[];
 extern u8 gBirchSpeech_AreYouReady[];
 
 extern struct SpriteTemplate gUnknown_02024E8C;
-extern const struct MenuAction gUnknown_081E79B0[];
-extern const struct MenuAction gMalePresetNames[];
-extern const struct MenuAction gFemalePresetNames[];
-
-extern const u8 gUnknown_081E7834[];
-
-extern const union AffineAnimCmd *const gSpriteAffineAnimTable_81E79AC[];
 
 //Menu layouts
 enum
@@ -138,7 +131,6 @@ static const u16 gUnknown_081E764C[][16] =
 static const u8 gBirchIntroShadowGfx[] = INCBIN_U8("graphics/birch_speech/shadow.4bpp.lz");
 static const u8 gUnknown_081E7834[] = INCBIN_U8("graphics/birch_speech/map.bin.lz");
 static const u16 gUnknown_081E795C[] = INCBIN_U16("graphics/birch_speech/bg2.gbapal");
-static const u16 gUnknown_081E796C[] = INCBIN_U16("graphics/birch_speech/blank_pal.gbapal");
 static const u16 gMainMenuPalette[] = INCBIN_U16("graphics/misc/main_menu.gbapal");
 
 static const union AffineAnimCmd gSpriteAffineAnim_81E799C[] =
@@ -760,7 +752,7 @@ static void Task_NewGameSpeech1(u8 taskId)
     LZ77UnCompVram(gBirchIntroShadowGfx, (void *)BG_VRAM);
     LZ77UnCompVram(gUnknown_081E7834, (void *)(BG_VRAM + 0x3800));
     LoadPalette(gUnknown_081E764C, 0, 0x40);
-    LoadPalette(gUnknown_081E796C, 1, 0x10);
+    LoadPalette(gUnknown_081E795C + 8, 1, 0x10);
     ScanlineEffect_Stop();
     ResetSpriteData();
     FreeAllSpritePalettes();
@@ -774,7 +766,7 @@ static void Task_NewGameSpeech1(u8 taskId)
     gTasks[taskId].data[3] = 0xFF;
     gTasks[taskId].tFrameCounter = 216;  //Wait 3.6 seconds (216 frames) before starting speech
 
-    PlayBGM(MUS_DOORO_X4);
+    PlayBGM(MUS_ROUTE122);
 }
 
 static void Task_NewGameSpeech2(u8 taskId)
@@ -790,7 +782,7 @@ static void Task_NewGameSpeech2(u8 taskId)
 
         gSprites[spriteId].pos1.x = 136;
         gSprites[spriteId].pos1.y = 60;
-        gSprites[spriteId].invisible = 0;
+        gSprites[spriteId].invisible = FALSE;
         gSprites[spriteId].oam.objMode = ST_OAM_OBJ_BLEND;
         StartSpriteFadeIn(taskId, 10);
         StartBackgroundFadeIn(taskId, 20);
@@ -841,7 +833,7 @@ static void Task_NewGameSpeech6(u8 taskId)
 
     gSprites[spriteId].pos1.x = 104;
     gSprites[spriteId].pos1.y = 72;
-    gSprites[spriteId].invisible = 0;
+    gSprites[spriteId].invisible = FALSE;
     gSprites[spriteId].data[0] = 0;
     CreatePokeballSprite(spriteId, gSprites[spriteId].oam.paletteNum, 0x70, 0x3A, 0, 0, 0x20, 0x0000FFFF);
     gTasks[taskId].func = Task_NewGameSpeech7;
@@ -1447,26 +1439,26 @@ void AddBirchSpeechObjects(u8 taskId)
     spriteId = CreateBirchSprite(136, 60, 1);
     gSprites[spriteId].callback = nullsub_34;
     gSprites[spriteId].oam.priority = 0;
-    gSprites[spriteId].invisible = 1;
+    gSprites[spriteId].invisible = TRUE;
     gTasks[taskId].tBirchSpriteId = spriteId;
 
     spriteId = CreateAzurillSprite(0x68, 0x48);
     gSprites[spriteId].callback = nullsub_34;
     gSprites[spriteId].oam.priority = 0;
-    gSprites[spriteId].invisible = 1;
+    gSprites[spriteId].invisible = TRUE;
     gTasks[taskId].tAzurillSpriteId = spriteId;
 
     //Create Brendan sprite
     spriteId = CreateTrainerSprite(0, 120, 60, 0, eBrendanSprite);
     gSprites[spriteId].callback = nullsub_34;
-    gSprites[spriteId].invisible = 1;
+    gSprites[spriteId].invisible = TRUE;
     gSprites[spriteId].oam.priority = 0;
     gTasks[taskId].tBrendanSpriteId = spriteId;
 
     //Create May sprite
     spriteId = CreateTrainerSprite(1, 120, 60, 0, eMaySprite);
     gSprites[spriteId].callback = nullsub_34;
-    gSprites[spriteId].invisible = 1;
+    gSprites[spriteId].invisible = TRUE;
     gSprites[spriteId].oam.priority = 0;
     gTasks[taskId].tMaySpriteId = spriteId;
 }
